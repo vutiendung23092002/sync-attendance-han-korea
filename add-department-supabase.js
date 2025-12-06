@@ -4,6 +4,7 @@ import { supabase } from "./src/core/supabase-client.js";
 async function addDepartmentClient(
   tbSupabaseName,
   idDepartment,
+  departmentName,
   larkAppId,
   larkAppSecret,
   status
@@ -11,6 +12,7 @@ async function addDepartmentClient(
   const { data, error } = await supabase.from(tbSupabaseName).upsert(
     {
       id_phongban: idDepartment,
+      ten_phong_ban: departmentName,
       lark_app_id: encrypt(larkAppId),
       lark_app_secret: encrypt(larkAppSecret),
       status: status,
@@ -21,6 +23,7 @@ async function addDepartmentClient(
 
 const tbSupabaseName = process.env.TABLE_SUBABASE_NAME;
 const idDepartment = process.env.ID_DEPARTMENT;
+const departmentName = process.env.DEPARTMENT_NAME;
 const larkAppId = process.env.LARK_APP_ID;
 const larkAppSecret = process.env.LARK_APP_SECRET;
 const status = process.env.STATUS;
@@ -28,6 +31,7 @@ const status = process.env.STATUS;
 addDepartmentClient(
   tbSupabaseName,
   idDepartment,
+  departmentName,
   larkAppId,
   larkAppSecret,
   status

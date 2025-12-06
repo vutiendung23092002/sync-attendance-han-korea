@@ -11,6 +11,11 @@ on:
         required: true
         type: string
 
+      DEPARTMENT_NAME:
+        description: "Nhập tên phòng ban:"
+        required: true
+        type: string
+
       LARK_APP_ID:
         description: "Nhập lark app id tương ứng phòng ban:"
         required: true
@@ -25,7 +30,6 @@ on:
         description: "Nhập trạng thái phòng ban (true/false):"
         required: true
         type: string
-
 
 jobs:
   sync-job:
@@ -50,6 +54,7 @@ jobs:
           AES_256_CBC_APP_SECRET_KEY: ${{ secrets.AES_256_CBC_APP_SECRET_KEY }}
           TABLE_SUBABASE_NAME: ${{ vars.TABLE_SUBABASE_NAME }}
           ID_DEPARTMENT: ${{ inputs.ID_DEPARTMENT }}
+          DEPARTMENT_NAME: ${{ inputs.DEPARTMENT_NAME }}
           LARK_APP_ID: ${{ inputs.LARK_APP_ID }}
           LARK_APP_SECRET: ${{ inputs.LARK_APP_SECRET }}
           STATUS: ${{ inputs.STATUS }}
