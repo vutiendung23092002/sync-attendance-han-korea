@@ -6,11 +6,6 @@ name: Node.js Add department client
 on:
   workflow_dispatch:
     inputs:
-      TABLE_SUBABASE_NAME:
-        description: "Nhập tên bảng lưu client phòng ban trên supabase:"
-        required: true
-        type: string
-
       ID_DEPARTMENT:
         description: "Nhập id phòng ban:"
         required: true
@@ -53,7 +48,7 @@ jobs:
         env:
           DATABASE_SERVICE_KEY: ${{ secrets.DATABASE_SERVICE_KEY }}
           AES_256_CBC_APP_SECRET_KEY: ${{ secrets.AES_256_CBC_APP_SECRET_KEY }}
-          TABLE_SUBABASE_NAME: ${{ inputs.TABLE_SUBABASE_NAME }}
+          TABLE_SUBABASE_NAME: ${{ vars.TABLE_SUBABASE_NAME }}
           ID_DEPARTMENT: ${{ inputs.ID_DEPARTMENT }}
           LARK_APP_ID: ${{ inputs.LARK_APP_ID }}
           LARK_APP_SECRET: ${{ inputs.LARK_APP_SECRET }}
