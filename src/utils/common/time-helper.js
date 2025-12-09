@@ -107,7 +107,7 @@ export function getTodayYmdhs() {
 }
 
 export function getTodayYmd() {
-  return dayjs().tz("Asia/Ho_Chi_Minh").format("YYYY/MM/DD");
+  return dayjs().tz("Asia/Ho_Chi_Minh").subtract(1, "day").format("YYYY/MM/DD");
 }
 
 export function ymdSlashToNumber(str) {

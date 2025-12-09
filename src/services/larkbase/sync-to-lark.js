@@ -23,7 +23,6 @@ export async function syncDataToLarkBaseFilterDate(
   endDate
 ) {
   console.log(`=== Đồng bộ dữ liệu lên LarkBase: ${tableName} ===`);
-  console.log(startDate, endDate)
 
   // Lấy dữ liệu nguồn
   const sourceRecords = records

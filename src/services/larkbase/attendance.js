@@ -12,7 +12,6 @@ import {
   vnTimeToUTCTimestampMiliseconds,
 } from "../../utils/index.js";
 
-
 export async function getEmployee(client, departmentId) {
   const employees = [];
   let pageToken = "";
@@ -62,6 +61,12 @@ export async function syncAttendanceForDepartment(
   console.log(`from: ${ymdSlashToNumber(from)} - to: ${ymdSlashToNumber(to)}`);
 
   const employees = await getEmployee(clientAtt, departmentId);
+  if (!employees || employees.length === 0) {
+    console.warn(
+      `Không tìm thấy user nào trong phòng ban '${departmentId}' → bỏ qua.`
+    );
+    return;
+  }
   const userIds = employees.map((u) => u.user_id);
 
   const attendanceResult = await getAttendanceResult(
@@ -99,3 +104,5 @@ export async function syncAttendanceForDepartment(
     timestampTo
   );
 }
+
+export async function getCorrectionRecords() {}

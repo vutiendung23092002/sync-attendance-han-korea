@@ -9,6 +9,7 @@ export function formatAttendanceResults(results) {
     const formatted = {
       day: numberYmdToFullDate(item.day),
       user_id: item.user_id,
+      employee_name: item.employee_name,
 
       check_in_time: checkIn.check_time
         ? utcTimestampToVn(checkIn.check_time)

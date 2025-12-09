@@ -27,6 +27,7 @@ export function buildField(key, label, type, uiType, cuCode) {
 export const ATTENDANCE_FIELD_MAP = {
   day: "Date(TH)",
   user_id: "User id(TH)",
+  employee_name: "Tên nhân viên",
 
   check_in_time: "Check in time(TH)",
   check_in_shift_time: "Check in shift time(TH)",
@@ -45,6 +46,7 @@ export const ATTENDANCE_TYPE_MAP = {
   day: 5,
   user_id: 1,
   employee: 11,
+  employee_name: 1,
 
   check_in_time: 5,
   check_in_shift_time: 5,
@@ -65,6 +67,7 @@ export const ATTENDANCE_UI_TYPE_MAP = {
   day: "DateTime",
   user_id: "Text",
   employee: "User",
+  employee_name: "Text",
 
   check_in_time: "DateTime",
   check_in_shift_time: "DateTime",

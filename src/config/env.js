@@ -3,13 +3,12 @@ dotenv.config();
 
 export const env = {
   LARK: {
-    tiktok_k_orders_items: {
-      app_id: process.env.LARK_TIKTOK_K_ORDER_ITEMS_APP_ID,
-      app_secret: process.env.LARK_TIKTOK_K_ORDER_ITEMS_APP_SECRET,
+    BASE_ID: process.env.LARK_BASE_ID,
+    hrm_app: {
+      app_id: process.env.LARK_HRM_APP_ID,
+      app_secret: process.env.LARK_HRM_APP_SECRET,
     },
-    tittok_k_finance: {
-      // chưa có gì hẹ hẹ
-    },
+
   },
 
   SUPABASE: {
