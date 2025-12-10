@@ -16,7 +16,7 @@ export async function syncDataToLarkBaseFilterDate(
     uiType,
     currencyCode = "VND",
     idLabel = "ID định danh (TTS)",
-    excludeUpdateField = null,
+    excludeUpdateField = null, // string hoặc array
   },
   filterFieldName,
   startDate,
@@ -59,7 +59,10 @@ export async function syncDataToLarkBaseFilterDate(
     );
 
     tableId = await larkbaseService.ensureLarkBaseTable(
-      client, baseId, tableName, fields
+      client,
+      baseId,
+      tableName,
+      fields
     );
   }
   console.log("TABLE_ID:", tableId);
@@ -107,7 +110,9 @@ export async function syncDataToLarkBaseFilterDate(
     )
     .map((r) => utils.mapFieldsToLark(r, fieldMap, typeMap));
 
-  // Cập nhật (có chặn field)
+  // ===========================
+  // UPDATE — có exclude field
+  // ===========================
   const toUpdate = data
     .filter(
       (r) =>
@@ -117,9 +122,31 @@ export async function syncDataToLarkBaseFilterDate(
     .map((r) => {
       const mapped = utils.mapFieldsToLark(r, fieldMap, typeMap).fields;
 
-      //  BLOCK FIELD ĐƯỢC KHAI BÁO TẠI OPTIONS
-      if (excludeUpdateField && mapped[excludeUpdateField] !== undefined) {
-        delete mapped[excludeUpdateField];
+      const excludeList = Array.isArray(excludeUpdateField)
+        ? excludeUpdateField
+        : excludeUpdateField
+        ? [excludeUpdateField]
+        : [];
+
+      if (excludeList.length > 0) {
+        const oldRecordFull = existingRecords.find(
+          (rec) => rec.record_id === larkIdMap[String(r.id)]
+        );
+
+        excludeList.forEach((fldLabel) => {
+          const oldVal = oldRecordFull?.fields?.[fldLabel];
+
+          const hasOldValue =
+            oldVal !== undefined &&
+            oldVal !== null &&
+            oldVal !== "" &&
+            !(Array.isArray(oldVal) && oldVal.length === 0);
+
+          // Nếu có dữ liệu cũ → không update field này
+          if (hasOldValue && mapped[fldLabel] !== undefined) {
+            delete mapped[fldLabel];
+          }
+        });
       }
 
       return {

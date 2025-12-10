@@ -37,6 +37,12 @@ export const ATTENDANCE_FIELD_MAP = {
   check_out_shift_time: "Check out shift time(TH)",
   check_out_result: "Check out result(TH)",
 
+  minutes_late: "Số phút đi muộn",
+  minutes_late_after_10m: "Sau 10p",
+  minutes_late_before_10m: "Trước 10p",
+
+  minutes_early: "Số phút về sớm",
+
   result_id: "result_id",
   id: "Id",
   hash: "hash",
@@ -58,9 +64,15 @@ export const ATTENDANCE_TYPE_MAP = {
   check_out_result: 1,
   check_out_result_supplement: 5,
 
+  minutes_late: 2,
+  minutes_late_after_10m: 2,
+  minutes_late_before_10m: 2,
+
+  minutes_early: 2,
+
   result_id: 1,
   hash: 1,
-  id:1
+  id: 1,
 };
 
 export const ATTENDANCE_UI_TYPE_MAP = {
@@ -79,7 +91,52 @@ export const ATTENDANCE_UI_TYPE_MAP = {
   check_out_result: "DateTime",
   check_out_result_supplement: "DateTime",
 
+  minutes_late: "Number",
+  minutes_late_after_10m: "Number",
+  minutes_late_before_10m: "Number",
+
+  minutes_early: "Number",
+
   result_id: "Text",
   hash: "Text",
-  id: "Text"
+  id: "Text",
+};
+
+export const CORECTION_RECORD_FIELD_MAP = {
+  create_time: "Submitted at",
+  remedy_date: "Date of error",
+  status: "Status",
+  reason: "Reason for correction",
+  remedy_time: "Replenishment time",
+  update_time: "Updated at",
+  user_id: "User ID",
+  approval_id: "Approval ID",
+  hash: "hash",
+  id: "Id",
+};
+
+export const CORECTION_RECORD_TYPE_MAP = {
+  approval_id: 1,
+  create_time: 5,
+  status: 1,
+  remedy_date: 5,
+  reason: 1,
+  remedy_time: 5,
+  user_id: 1,
+  update_time: 5,
+  hash: 1,
+  id: 1,
+};
+
+export const CORECTION_RECORD_UI_TYPE_MAP = {
+  approval_id: "Text",
+  create_time: "DateTime",
+  status: "Text",
+  remedy_date: "DateTime",
+  reason: "Text",
+  remedy_time: "DateTime",
+  user_id: "Text",
+  update_time: "DateTime",
+  hash: "Text",
+  id: "Text",
 };

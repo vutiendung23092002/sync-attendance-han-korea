@@ -1,11 +1,11 @@
-import { syncAttendanceForDepartment } from "./src/services/larkbase/attendance.js";
+import { syncCorrectionRecords } from "./src/services/larkbase/attendance.js";
 import { createLarkClient } from "./src/core/larkbase-client.js";
-import { getTodayYmd, getTodayYmdhs } from "./src/utils/common/time-helper.js";
+import { getTodayYmd } from "./src/utils/common/time-helper.js";
 import { decrypt } from "./src/utils/common/AES-256-CBC.js";
 import { env } from "./src/config/env.js";
 import { supabase } from "./src/core/supabase-client.js";
 
-async function main(hrmAppId, hrmAppSecret, baseID, tableName) {
+async function syncCorectionRecords(hrmAppId, hrmAppSecret, baseID, tbCorectionNameHrm, from, to) {
   console.log("=== BẮT ĐẦU SYNC TOÀN BỘ PHÒNG BAN ===");
 
   // 1) Lấy danh sách tất cả apps Attendance đang ON
@@ -14,11 +14,6 @@ async function main(hrmAppId, hrmAppSecret, baseID, tableName) {
     .select()
     .eq("status", true);
 
-  // if (error) {
-  //   console.error("LỖI LẤY DANH SÁCH CLIENT:", error);
-  //   return;
-  // }
-
   if (!client_attendance?.length) {
     console.log("Không có client nào cần sync.");
     return;
@@ -26,13 +21,6 @@ async function main(hrmAppId, hrmAppSecret, baseID, tableName) {
 
   // 2) Tạo HRM client (1 app duy nhất)
   const clientHrm = await createLarkClient(hrmAppId, hrmAppSecret);
-
-  const from = getTodayYmd();
-  const to = getTodayYmd();
-
-  console.log(
-    `Giờ hiện tại: ${getTodayYmdhs()} | Khoảng sync: ${from} - ${to}`
-  );
 
   // 3) Lặp qua từng client để sync
   for (const c of client_attendance) {
@@ -50,12 +38,11 @@ async function main(hrmAppId, hrmAppSecret, baseID, tableName) {
 
       console.log(">>> ĐÃ TẠO CLIENT ATTENDANCE");
 
-      // 4) Gọi sync cho từng phòng ban
-      await syncAttendanceForDepartment(
+      await syncCorrectionRecords(
         clientAtt,
         clientHrm,
         baseID,
-        tableName,
+        tbCorectionNameHrm,
         c.id_phongban,
         from,
         to
@@ -76,6 +63,9 @@ async function main(hrmAppId, hrmAppSecret, baseID, tableName) {
 const hrmAppId = env.LARK.hrm_app.app_id;
 const hrmAppSecret = env.LARK.hrm_app.app_secret;
 const baseID = env.LARK.BASE_ID;
-const tableName = "Tổng hợp chấm công v1.0.0";
 
-main(hrmAppId, hrmAppSecret, baseID, tableName);
+const tbCorectionNameHrm = process.env.TABLE_CORECTION_NAME;
+const from = process.env.FROM ? `${process.env.FROM} 00:00:00` : getTodayYmd(30);
+const to = process.env.TO ? `${process.env.TO} 23:59:59` : getTodayYmd(0);
+
+syncCorectionRecords(hrmAppId, hrmAppSecret, baseID, tbCorectionNameHrm, from, to);

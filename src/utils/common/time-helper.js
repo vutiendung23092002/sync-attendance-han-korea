@@ -102,12 +102,12 @@ export function vnTimeToUTCTimestampRaw(datetimeStr) {
   return Math.floor(dateVN.getTime() / 1000);
 }
 
-export function getTodayYmdhs() {
-  return dayjs().tz("Asia/Ho_Chi_Minh").format("YYYY/MM/DD HH:mm:ss");
+export function getTodayYmdhs(subDays = 0) {
+  return dayjs().tz("Asia/Ho_Chi_Minh").subtract(subDays, "day").format("YYYY/MM/DD HH:mm:ss");
 }
 
-export function getTodayYmd() {
-  return dayjs().tz("Asia/Ho_Chi_Minh").subtract(1, "day").format("YYYY/MM/DD");
+export function getTodayYmd(subDays = 0) {
+  return dayjs().tz("Asia/Ho_Chi_Minh").subtract(subDays, "day").format("YYYY/MM/DD");
 }
 
 export function ymdSlashToNumber(str) {
