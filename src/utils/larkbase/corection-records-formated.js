@@ -25,6 +25,7 @@ export function formatCorrectionRecords(records) {
       id_lookup: `${item.user_id}_${item.remedy_date}`,
       // id unique giống style attendance
       id: `${item.user_id}_${item.remedy_date}_${item.approval_id}`,
+      id_lookup_correction: `${item.user_id}_${item.remedy_date}`,
     };
 
     formatted.hash = generateHash(formatted);

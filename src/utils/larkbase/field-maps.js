@@ -44,6 +44,7 @@ export const ATTENDANCE_FIELD_MAP = {
   minutes_early: "Số phút về sớm",
 
   result_id: "result_id",
+  id_lookup_correction: "id_lookup_correction",
   id: "Id",
   hash: "hash",
 };
@@ -71,6 +72,7 @@ export const ATTENDANCE_TYPE_MAP = {
   minutes_early: 2,
 
   result_id: 1,
+  id_lookup_correction: 1,
   hash: 1,
   id: 1,
 };
@@ -98,6 +100,7 @@ export const ATTENDANCE_UI_TYPE_MAP = {
   minutes_early: "Number",
 
   result_id: "Text",
+  id_lookup_correction: "Text",
   hash: "Text",
   id: "Text",
 };
@@ -113,6 +116,7 @@ export const CORECTION_RECORD_FIELD_MAP = {
   approval_id: "Approval ID",
   hash: "hash",
   id: "Id",
+  id_lookup_correction: "id_lookup_correction",
 };
 
 export const CORECTION_RECORD_TYPE_MAP = {
@@ -126,6 +130,7 @@ export const CORECTION_RECORD_TYPE_MAP = {
   update_time: 5,
   hash: 1,
   id: 1,
+  id_lookup_correction: 1,
 };
 
 export const CORECTION_RECORD_UI_TYPE_MAP = {
@@ -139,4 +144,5 @@ export const CORECTION_RECORD_UI_TYPE_MAP = {
   update_time: "DateTime",
   hash: "Text",
   id: "Text",
+  id_lookup_correction: "Text",
 };

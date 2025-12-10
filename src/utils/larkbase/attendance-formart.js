@@ -118,7 +118,7 @@ export function formatAttendanceResults(results) {
         checkOutTime,
         checkOutShift
       ),
-
+      id_lookup_correction: `${item.user_id}_${item.day}`,
       result_id: item.result_id,
       id: `${item.user_id}_${item.result_id}`,
     };
