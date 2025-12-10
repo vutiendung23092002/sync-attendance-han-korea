@@ -74,7 +74,7 @@ const hrmAppId = env.LARK.hrm_app.app_id;
 const hrmAppSecret = env.LARK.hrm_app.app_secret;
 const baseID = env.LARK.BASE_ID;
 const tableName = process.env.TABLE_NAME_ATTENDANCE;
-const from = process.env.FROM ? `${process.env.FROM} 00:00:00` : getTodayYmd(30);
-const to = process.env.TO ? `${process.env.TO} 23:59:59` : getTodayYmd(0);
+const from = process.env.FROM ? `${process.env.FROM}` : getTodayYmd(30);
+const to = process.env.TO ? `${process.env.TO}` : getTodayYmd(0);
 
 syncAttendance(hrmAppId, hrmAppSecret, baseID, tableName, from, to);

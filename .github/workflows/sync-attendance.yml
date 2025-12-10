@@ -26,7 +26,7 @@ on:
         type: string
 
 jobs:
-  sync-finance-job:
+  sync-attendance-job:
     runs-on: ubuntu-latest
     environment: sync-attendance
 
@@ -50,7 +50,7 @@ jobs:
           LARK_HRM_APP_SECRET: ${{ secrets.LARK_HRM_APP_SECRET }}
           LARK_BASE_ID: ${{ vars.LARK_BASE_ID }}
           TABLE_NAME_ATTENDANCE: ${{ inputs.TABLE_NAME_ATTENDANCE != '' && inputs.TABLE_NAME_ATTENDANCE || vars.TABLE_NAME_ATTENDANCE }}
-          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
-          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+          FROM: ${{ inputs.FROM  }}
+          TO: ${{ inputs.TO  }}
 
         run: node sync-attendance.js
