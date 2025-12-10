@@ -65,7 +65,7 @@ const hrmAppSecret = env.LARK.hrm_app.app_secret;
 const baseID = env.LARK.BASE_ID;
 
 const tbCorectionNameHrm = process.env.TABLE_CORECTION_NAME;
-const from = process.env.FROM ? `${process.env.FROM} 00:00:00` : getTodayYmd(30);
-const to = process.env.TO ? `${process.env.TO} 23:59:59` : getTodayYmd(0);
+const from = process.env.FROM ? `${process.env.FROM}` : getTodayYmd(30);
+const to = process.env.TO ? `${process.env.TO}` : getTodayYmd(0);
 
 syncCorectionRecords(hrmAppId, hrmAppSecret, baseID, tbCorectionNameHrm, from, to);
