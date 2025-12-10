@@ -19,7 +19,7 @@ export function formatCorrectionRecords(records) {
       status: STATUS_TEXT_MAP[item.status] ?? "Unknown",
       remedy_date: numberYmdToFullDate(item.remedy_date),
       reason: item.reason ?? "",
-      remedy_time: item.remedy_time,
+      remedy_time: String(item.remedy_time) ?? "",
       user_id: item.user_id ?? "",
       update_time: utcTimestampToVn(item.update_time),
       id_lookup: `${item.user_id}_${item.remedy_date}`,

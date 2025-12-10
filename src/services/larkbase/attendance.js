@@ -174,6 +174,8 @@ export async function syncCorrectionRecords(
   const timestampTo =
     vnTimeToUTCTimestampMiliseconds(`${to} 23:59:59`) + ONE_DAY;
 
+  console.log(corectionRecordFormatted);
+
   await syncDataToLarkBaseFilterDate(
     clientHrm,
     baseIdHrm,
