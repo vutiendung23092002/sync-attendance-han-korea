@@ -1,0 +1,56 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Nodejs sync attendance
+
+on:
+  schedule:
+    - cron: "30 2 * * *"   # chạy 09:00 VN (2:00 UTC)
+    - cron: "30 16 * * *"   # chạy 23:00 VN (16:00 UTC)
+    - cron: "30 9 * * *"  # chạy 16:30 VN (9:30 UTC)
+  workflow_dispatch:
+    inputs:
+      TABLE_CORECTION_NAME:
+        description: "Tên bảng cần kiểm tra"
+        required: true
+        type: string
+        
+      FROM:
+        description: "Từ ngày (YYYY/MM/DD)"
+        required: true
+        type: string
+
+      TO:
+        description: "Đến ngày (YYYY/MM/DD)"
+        required: true
+        type: string
+
+jobs:
+  sync-correction-job:
+    runs-on: ubuntu-latest
+    environment: sync-correction
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci --only=production
+
+      - name: Run sync-correction-records.js
+        env:
+          DATABASE_SERVICE_KEY: ${{ secrets.DATABASE_SERVICE_KEY }}
+          AES_256_CBC_APP_SECRET_KEY: ${{ secrets.AES_256_CBC_APP_SECRET_KEY }}
+          LARK_HRM_APP_ID: ${{ secrets.LARK_HRM_APP_ID }}
+          LARK_HRM_APP_SECRET: ${{ secrets.LARK_HRM_APP_SECRET }}
+          LARK_BASE_ID: ${{ vars.LARK_BASE_ID }}
+          TABLE_CORECTION_NAME: ${{ inputs.TABLE_CORECTION_NAME != '' && inputs.TABLE_CORECTION_NAME || vars.TABLE_CORECTION_NAME }}
+          FROM: ${{ inputs.FROM  }}
+          TO: ${{ inputs.TO  }}
+
+        run: node sync-correction-records.js
