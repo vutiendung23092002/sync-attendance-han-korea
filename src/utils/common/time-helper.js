@@ -79,12 +79,7 @@ export function vnTimeToUtcTimestamp(datetimeStr) {
 }
 
 export function utcTimestampToVn(ts) {
-  if (!ts) return "";
-
-  const num = Number(ts);
-  if (isNaN(num) || num <= 0) return "";
-
-  const d = new Date(num * 1000 + 7 * 60 * 60 * 1000);
+  const d = new Date(ts * 1000);
 
   const yyyy = d.getUTCFullYear();
   const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
@@ -95,6 +90,7 @@ export function utcTimestampToVn(ts) {
 
   return `${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`;
 }
+
 
 export function vnTimeToUTCTimestampRaw(datetimeStr) {
   const normalized = datetimeStr.replace(/\//g, "-");
