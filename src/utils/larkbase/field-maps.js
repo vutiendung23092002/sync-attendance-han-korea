@@ -148,9 +148,9 @@ export const CORECTION_RECORD_UI_TYPE_MAP = {
 };
 
 export const LEAVE_FIELD_MAP = {
+  user_id: "User Id Requester",
   start_time: "Start time",
   end_time: "End time",
-  user_id: "User Id Requester",
   status: "Status",
   duration: "Duration",
   leave_unit: "Leave unit",
