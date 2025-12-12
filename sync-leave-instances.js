@@ -73,8 +73,6 @@ async function listLeaveInstances(
       instance_code: x.instance.code,
     }));
 
-    console.log(minimal);
-
     for (const item of minimal) {
       const details = await getdetailsInstance(
         clientAtt,

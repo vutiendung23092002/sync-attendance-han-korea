@@ -11,6 +11,12 @@ import {
 import { env } from "./src/config/env.js";
 import { writeJsonFile } from "./src/utils/index.js";
 
+function getHourFromTimestamp(ts) {
+  // convert về giờ VN
+  const d = new Date(ts);
+  return d.getHours();
+}
+
 async function checkCorrectionStatus(
   hrmAppId,
   hrmAppSecret,
@@ -38,7 +44,8 @@ async function checkCorrectionStatus(
     timestampFrom,
     timestampTo
   );
-  writeJsonFile("./src/data/attendance-records.json", attendanceRecords);
+
+  writeJsonFile("./logs/attendance-records.json", attendanceRecords);
 
   // 2) Lấy correction
   const correctionRecords = await searchLarkRecordsFilterDate(
@@ -50,14 +57,21 @@ async function checkCorrectionStatus(
     timestampFrom,
     timestampTo
   );
-  writeJsonFile("./src/data/correction-records.json", correctionRecords);
 
+  // 3) Map correction theo id_lookup
   // 3) Map correction theo id_lookup
   const correctionMap = {};
   for (const c of correctionRecords) {
     const f = c.fields;
     const lookup = f["id_lookup_correction"]?.[0]?.text;
     if (!lookup) continue;
+
+    // Chỉ cho phép trạng thái APPROVED
+    const status = f["Status"];
+    if (status !== "Approved") {
+      console.log(`--> BỎ correction vì Status = ${status}`);
+      continue;
+    }
 
     if (!correctionMap[lookup]) correctionMap[lookup] = [];
 
@@ -67,12 +81,7 @@ async function checkCorrectionStatus(
     });
   }
 
-  // Hàm tạo timestamp 12:30
-  function getNoonTimestamp(dateTs) {
-    const d = new Date(dateTs);
-    d.setUTCHours(12, 30, 0, 0);
-    return d.getTime();
-  }
+  writeJsonFile("./logs/correctionMap.json", correctionMap);
 
   // 4) Build list updates
   const updates = [];
@@ -89,24 +98,40 @@ async function checkCorrectionStatus(
 
     for (const m of matches) {
       const repl = m.replenishment;
-      const limit1230 = getNoonTimestamp(m.dateOfError);
+      const hour = getHourFromTimestamp(repl);
 
-      console.log(`Record ID: ${a.record_id} | Replenishment: ${repl} | Limit 12:30: ${limit1230}`);
+      const currentCheckIn = f["Check in time(TH)"];
+      const currentCheckOut = f["Check out time(TH)"];
 
-      if (repl < limit1230) {
+      // Nếu đã cập nhật rồi thì bỏ
+      if (currentCheckIn === repl || currentCheckOut === repl) continue;
+
+      // Nếu giờ < 12 => check-in
+      if (hour < 12) {
         updateField["Check in time(TH)"] = repl;
         updateField["Check in result(TH)"] = "Normal";
-      } else {
+        updateField["Số phút đi muộn"] = 0;
+        updateField["Sau 10p"] = 0;
+        updateField["Trước 10p"] = 0;
+      }
+      // >= 12 => check-out
+      else {
         updateField["Check out time(TH)"] = repl;
         updateField["Check out result(TH)"] = "Normal";
+        updateField["Số phút về sớm"] = 0;
       }
     }
+
+    // Nếu không có gì để update thì bỏ qua record
+    if (Object.keys(updateField).length === 0) continue;
 
     updates.push({
       record_id: a.record_id,
       fields: updateField,
     });
   }
+
+  writeJsonFile("./logs/updates.json", updates);
 
   // 5) Update Lark
   if (updates.length > 0) {
