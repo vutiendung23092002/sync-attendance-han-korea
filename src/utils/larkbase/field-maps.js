@@ -65,7 +65,7 @@ export const ATTENDANCE_TYPE_MAP = {
   check_out_result: 1,
   check_out_result_supplement: 5,
 
-  minutes_late: Number,
+  minutes_late: 2,
   minutes_late_after_10m: 2,
   minutes_late_before_10m: 2,
 
