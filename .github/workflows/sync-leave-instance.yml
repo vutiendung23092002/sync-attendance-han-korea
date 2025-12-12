@@ -53,4 +53,4 @@ jobs:
           FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
           TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
 
-        run: sync-leave-instances.js
+        run: node sync-leave-instances.js
