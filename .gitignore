@@ -10,6 +10,7 @@ node_modules/
 # Ignore logs and temp data
 logs/
 *.log
+*.json
 
 # Ignore local data x
 src/data/*.json

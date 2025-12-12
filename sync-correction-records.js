@@ -5,7 +5,14 @@ import { decrypt } from "./src/utils/common/AES-256-CBC.js";
 import { env } from "./src/config/env.js";
 import { supabase } from "./src/core/supabase-client.js";
 
-async function syncCorectionRecords(hrmAppId, hrmAppSecret, baseID, tbCorectionNameHrm, from, to) {
+async function syncCorectionRecords(
+  hrmAppId,
+  hrmAppSecret,
+  baseID,
+  tbCorectionNameHrm,
+  from,
+  to
+) {
   console.log("=== BẮT ĐẦU SYNC TOÀN BỘ PHÒNG BAN ===");
 
   // 1) Lấy danh sách tất cả apps Attendance đang ON
@@ -62,10 +69,18 @@ async function syncCorectionRecords(hrmAppId, hrmAppSecret, baseID, tbCorectionN
 
 const hrmAppId = env.LARK.hrm_app.app_id;
 const hrmAppSecret = env.LARK.hrm_app.app_secret;
+
 const baseID = env.LARK.BASE_ID;
-
 const tbCorectionNameHrm = process.env.TABLE_CORECTION_NAME;
-const from = process.env.FROM ? `${process.env.FROM}` : getTodayYmd(30);
-const to = process.env.TO ? `${process.env.TO}` : getTodayYmd(0);
 
-syncCorectionRecords(hrmAppId, hrmAppSecret, baseID, tbCorectionNameHrm, from, to);
+const from = process.env.FROM ? process.env.FROM : null;
+const to = process.env.TO ? process.env.TO : null;
+
+syncCorectionRecords(
+  hrmAppId,
+  hrmAppSecret,
+  baseID,
+  tbCorectionNameHrm,
+  from,
+  to
+);

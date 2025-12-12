@@ -174,8 +174,6 @@ export async function syncCorrectionRecords(
   const timestampTo =
     vnTimeToUTCTimestampMiliseconds(`${to} 23:59:59`) + ONE_DAY;
 
-  console.log(corectionRecordFormatted);
-
   await syncDataToLarkBaseFilterDate(
     clientHrm,
     baseIdHrm,
@@ -193,4 +191,44 @@ export async function syncCorrectionRecords(
     timestampFrom,
     timestampTo
   );
+}
+
+export async function getListLeaveInstances(client, from, to, approvalCode) {
+  let instances = [];
+  let pageToken = "";
+
+  do {
+    const res = await client.approval.instance.query({
+      params: {
+        page_size: 200,
+        user_id_type: "open_id",
+      },
+      data: {
+        approval_code: approvalCode,
+        instance_status: "ALL",
+        instance_start_time_from: from,
+        instance_start_time_to: to,
+      },
+    });
+    instances.push(...(res.data?.instance_list ?? []));
+    pageToken = res.data?.page_token;
+  } while (pageToken);
+  return instances;
+}
+
+export async function getdetailsInstance(client, instanceCode, userId) {
+  const res = await client.approval.instance.get(
+    {
+      path: {
+        instance_id: instanceCode,
+      },
+      params: {
+        locale: "en-US",
+        user_id: userId,
+        user_id_type: "user_id",
+      },
+    }
+  );
+
+  return res;
 }

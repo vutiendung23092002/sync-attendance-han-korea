@@ -1,6 +1,6 @@
 import {
   numberYmdToFullDate,
-  utcTimestampToVn,
+  utcTimestampSToVn,
 } from "../common/time-helper.js";
 import { generateHash } from "../common/generate-hash.js";
 
@@ -59,19 +59,19 @@ export function formatAttendanceResults(results) {
     const checkOut = r.check_out_record || {};
 
     const checkInTime = checkIn.check_time
-      ? utcTimestampToVn(checkIn.check_time)
+      ? utcTimestampSToVn(checkIn.check_time)
       : "";
 
     const checkInShift = r.check_in_shift_time
-      ? utcTimestampToVn(r.check_in_shift_time)
+      ? utcTimestampSToVn(r.check_in_shift_time)
       : "";
 
     const checkOutTime = checkOut.check_time
-      ? utcTimestampToVn(checkOut.check_time)
+      ? utcTimestampSToVn(checkOut.check_time)
       : "";
 
     const checkOutShift = r.check_out_shift_time
-      ? utcTimestampToVn(r.check_out_shift_time)
+      ? utcTimestampSToVn(r.check_out_shift_time)
       : "";
 
     const formatted = {
@@ -80,19 +80,19 @@ export function formatAttendanceResults(results) {
       employee_name: item.employee_name,
 
       check_in_time: checkIn.check_time
-        ? utcTimestampToVn(checkIn.check_time)
+        ? utcTimestampSToVn(checkIn.check_time)
         : "",
       check_in_shift_time: r.check_in_shift_time
-        ? utcTimestampToVn(r.check_in_shift_time)
+        ? utcTimestampSToVn(r.check_in_shift_time)
         : "",
       check_in_result: r.check_in_result ?? "",
       // check_in_result_supplement: r.check_in_result_supplement ?? "",
 
       check_out_time: checkOut.check_time
-        ? utcTimestampToVn(checkOut.check_time)
+        ? utcTimestampSToVn(checkOut.check_time)
         : "",
       check_out_shift_time: r.check_out_shift_time
-        ? utcTimestampToVn(r.check_out_shift_time)
+        ? utcTimestampSToVn(r.check_out_shift_time)
         : "",
       check_out_result: r.check_out_result ?? "",
       // check_out_result_supplement: r.check_out_result_supplement ?? "",

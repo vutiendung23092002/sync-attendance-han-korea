@@ -5,6 +5,7 @@ export async function createLarkClient(appId, appSecret) {
     appId: appId,
     appSecret: appSecret,
     disableTokenCache: false,
+    domain: lark.Domain.Lark,
   });
 
   return larkClient;

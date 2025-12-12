@@ -5,7 +5,14 @@ import { decrypt } from "./src/utils/common/AES-256-CBC.js";
 import { env } from "./src/config/env.js";
 import { supabase } from "./src/core/supabase-client.js";
 
-async function syncAttendance(hrmAppId, hrmAppSecret, baseID, tableName, from, to) {
+async function syncAttendance(
+  hrmAppId,
+  hrmAppSecret,
+  baseID,
+  tableName,
+  from,
+  to
+) {
   console.log("=== BẮT ĐẦU SYNC TOÀN BỘ PHÒNG BAN ===");
 
   // 1) Lấy danh sách tất cả apps Attendance đang ON
@@ -26,10 +33,6 @@ async function syncAttendance(hrmAppId, hrmAppSecret, baseID, tableName, from, t
 
   // 2) Tạo HRM client (1 app duy nhất)
   const clientHrm = await createLarkClient(hrmAppId, hrmAppSecret);
-
-  console.log(
-    `Giờ hiện tại: ${getTodayYmdhs()} | Khoảng sync: ${from} - ${to}`
-  );
 
   // 3) Lặp qua từng client để sync
   for (const c of client_attendance) {
@@ -72,9 +75,11 @@ async function syncAttendance(hrmAppId, hrmAppSecret, baseID, tableName, from, t
 
 const hrmAppId = env.LARK.hrm_app.app_id;
 const hrmAppSecret = env.LARK.hrm_app.app_secret;
+
 const baseID = env.LARK.BASE_ID;
 const tableName = process.env.TABLE_NAME_ATTENDANCE;
-const from = process.env.FROM ? `${process.env.FROM}` : getTodayYmd(30);
-const to = process.env.TO ? `${process.env.TO}` : getTodayYmd(0);
+
+const from = process.env.FROM ? process.env.FROM : null;
+const to = process.env.TO ? process.env.TO : null;
 
 syncAttendance(hrmAppId, hrmAppSecret, baseID, tableName, from, to);

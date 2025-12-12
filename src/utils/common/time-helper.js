@@ -78,8 +78,21 @@ export function vnTimeToUtcTimestamp(datetimeStr) {
   return Math.floor(utcMillis / 1000);
 }
 
-export function utcTimestampToVn(ts) {
+export function utcTimestampSToVn(ts) {
   const d = new Date(ts * 1000);
+
+  const yyyy = d.getUTCFullYear();
+  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(d.getUTCDate()).padStart(2, "0");
+  const hh = String(d.getUTCHours()).padStart(2, "0");
+  const mi = String(d.getUTCMinutes()).padStart(2, "0");
+  const ss = String(d.getUTCSeconds()).padStart(2, "0");
+
+  return `${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`;
+}
+
+export function utcTimestampMsToVn(ts) {
+  const d = new Date(ts);
 
   const yyyy = d.getUTCFullYear();
   const mm = String(d.getUTCMonth() + 1).padStart(2, "0");

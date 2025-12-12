@@ -50,7 +50,7 @@ jobs:
           LARK_HRM_APP_SECRET: ${{ secrets.LARK_HRM_APP_SECRET }}
           LARK_BASE_ID: ${{ vars.LARK_BASE_ID }}
           TABLE_NAME_ATTENDANCE: ${{ inputs.TABLE_NAME_ATTENDANCE != '' && inputs.TABLE_NAME_ATTENDANCE || vars.TABLE_NAME_ATTENDANCE }}
-          FROM: ${{ inputs.FROM  }}
-          TO: ${{ inputs.TO  }}
+          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
+          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
 
         run: node sync-attendance.js
