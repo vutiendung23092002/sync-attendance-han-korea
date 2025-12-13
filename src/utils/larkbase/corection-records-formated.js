@@ -21,6 +21,7 @@ export function formatCorrectionRecords(records) {
       reason: item.reason ?? "",
       remedy_time: new Date(item.remedy_time.replace(" ", "T") + "+07:00").toISOString(),
       user_id: item.user_id ?? "",
+      department_name: item.department_name,
       update_time: utcTimestampSToVn(item.update_time),
       id_lookup: `${item.user_id}_${item.remedy_date}`,
       // id unique giống style attendance

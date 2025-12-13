@@ -149,10 +149,15 @@ export async function syncCorrectionRecords(
   baseIdHrm,
   tbCorectionNameHrm,
   departmentId,
+  departmentName,
   from,
   to
 ) {
-  console.log(`from: ${String(vnTimeToUtcTimestamp(`${from} 00:00:00`))} - to: ${String(vnTimeToUtcTimestamp(`${to} 23:59:59`))}`);
+  console.log(
+    `from: ${String(vnTimeToUtcTimestamp(`${from} 00:00:00`))} - to: ${String(
+      vnTimeToUtcTimestamp(`${to} 23:59:59`)
+    )}`
+  );
   const employees = await getEmployee(clientAtt, departmentId);
 
   if (!employees || employees.length === 0) {
@@ -172,7 +177,13 @@ export async function syncCorrectionRecords(
 
   const corectionRecordRaw = corectionRecords?.data.user_remedys || [];
 
-  const corectionRecordFormatted = formatCorrectionRecords(corectionRecordRaw);
+  // const corectionRecordFormatted = formatCorrectionRecords(corectionRecordRaw);
+  const corectionRecordFormatted = formatCorrectionRecords(
+    corectionRecordRaw
+  ).map((r) => ({
+    ...r,
+    department_name: departmentName?.trim(),
+  }));
 
   const ONE_DAY = 24 * 60 * 60 * 1000; // ms
   const timestampFrom =

@@ -51,6 +51,7 @@ async function syncCorectionRecords(
         baseID,
         tbCorectionNameHrm,
         c.id_phongban,
+        c.ten_phong_ban,
         from,
         to
       );
