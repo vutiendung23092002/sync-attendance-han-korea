@@ -12,9 +12,8 @@ import { env } from "./src/config/env.js";
 import { writeJsonFile } from "./src/utils/index.js";
 
 function getHourFromTimestamp(ts) {
-  // convert về giờ VN
   const d = new Date(ts);
-  return d.getHours();
+  return (d.getUTCHours() + 7) % 24;
 }
 
 async function checkCorrectionStatus(
