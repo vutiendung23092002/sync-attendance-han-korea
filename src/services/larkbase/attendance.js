@@ -63,6 +63,7 @@ export async function syncAttendanceForDepartment(
   baseIdHrm,
   tbNameHrm,
   departmentId,
+  departmentName,
   from,
   to
 ) {
@@ -86,7 +87,12 @@ export async function syncAttendanceForDepartment(
 
   const attendanceRaw = attendanceResult?.data?.user_task_results || [];
 
-  const attendanceFormatted = formatAttendanceResults(attendanceRaw);
+  const attendanceFormatted = formatAttendanceResults(attendanceRaw).map(
+    (r) => ({
+      ...r,
+      department_name: departmentName?.trim(),
+    })
+  );
 
   const ONE_DAY = 24 * 60 * 60 * 1000; // ms
   const timestampFrom =
@@ -217,18 +223,16 @@ export async function getListLeaveInstances(client, from, to, approvalCode) {
 }
 
 export async function getdetailsInstance(client, instanceCode, userId) {
-  const res = await client.approval.instance.get(
-    {
-      path: {
-        instance_id: instanceCode,
-      },
-      params: {
-        locale: "en-US",
-        user_id: userId,
-        user_id_type: "user_id",
-      },
-    }
-  );
+  const res = await client.approval.instance.get({
+    path: {
+      instance_id: instanceCode,
+    },
+    params: {
+      locale: "en-US",
+      user_id: userId,
+      user_id_type: "user_id",
+    },
+  });
 
   return res;
 }

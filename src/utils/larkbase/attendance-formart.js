@@ -78,6 +78,7 @@ export function formatAttendanceResults(results) {
       day: numberYmdToFullDate(item.day),
       user_id: item.user_id,
       employee_name: item.employee_name,
+      department_name: item.department_name,
 
       check_in_time: checkIn.check_time
         ? utcTimestampSToVn(checkIn.check_time)

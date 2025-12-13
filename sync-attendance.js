@@ -57,6 +57,7 @@ async function syncAttendance(
         baseID,
         tableName,
         c.id_phongban,
+        c.ten_phong_ban,
         from,
         to
       );
