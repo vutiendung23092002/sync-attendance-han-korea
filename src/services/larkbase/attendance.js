@@ -152,7 +152,7 @@ export async function syncCorrectionRecords(
   from,
   to
 ) {
-  console.log(`from: ${from} - to: ${to}`);
+  console.log(`from: ${String(vnTimeToUtcTimestamp(`${from} 00:00:00`))} - to: ${String(vnTimeToUtcTimestamp(`${to} 23:59:59`))}`);
   const employees = await getEmployee(clientAtt, departmentId);
 
   if (!employees || employees.length === 0) {
