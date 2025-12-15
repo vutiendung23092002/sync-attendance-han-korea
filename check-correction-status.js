@@ -64,7 +64,7 @@ async function checkCorrectionStatus(
     // Chỉ cho phép trạng thái APPROVED
     const status = f["Status"];
     if (status !== "Approved") {
-      console.log(`--> BỎ correction vì Status = ${status}`);
+      console.log(`--> Bỏ qua correction ${lookup} vì Status = ${status}`);
       continue;
     }
 
@@ -97,7 +97,10 @@ async function checkCorrectionStatus(
       const currentCheckOut = f["Check out time(TH)"];
 
       // Nếu đã cập nhật rồi thì bỏ
-      if (currentCheckIn === repl || currentCheckOut === repl) continue;
+      if (currentCheckIn === repl || currentCheckOut === repl) {
+        console.log(`--> Bỏ qua correction ${lookup} vì replenishment time đã được cập nhật`)
+        continue;
+      };
 
       // Nếu giờ < 12 => check-in
       if (hour < 12) {
