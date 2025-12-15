@@ -80,7 +80,7 @@ const hrmAppSecret = env.LARK.hrm_app.app_secret;
 const baseID = env.LARK.BASE_ID;
 const tableName = process.env.TABLE_NAME_ATTENDANCE;
 
-const from = process.env.FROM ? process.env.FROM : null;
-const to = process.env.TO ? process.env.TO : null;
+const from = process.env.FROM ? process.env.FROM : getTodayYmd(30);
+const to = process.env.TO ? process.env.TO : getTodayYmd(0);
 
 syncAttendance(hrmAppId, hrmAppSecret, baseID, tableName, from, to);

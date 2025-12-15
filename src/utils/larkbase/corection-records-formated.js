@@ -78,8 +78,8 @@ export function formatCorrectionRecordsV2(records) {
       last_task_user_id: lastTaskUser,
 
       original_record: parsedForm[0]?.value?.widgetRemedyGroupV2ClockTime?.text,
-      date_of_error: parsedForm[0]?.value?.widgetRemedyGroupV2RemedyDate?.text, //----
-      replenishment_time: //----
+      date_of_error: parsedForm[0]?.value?.widgetRemedyGroupV2RemedyDate?.text,
+      replenishment_time:
         parsedForm[0]?.value?.widgetRemedyGroupV2RemedyTime?.text,
       reason_for_correction: parsedForm[0]?.value?.widgetRemedyGroupV2Reason,
 

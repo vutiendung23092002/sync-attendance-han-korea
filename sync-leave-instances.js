@@ -117,7 +117,7 @@ const baseID = env.LARK.BASE_ID;
 
 const tableName = process.env.TABLE_INSTANCES_NAME;
 
-const from = process.env.FROM ? `${process.env.FROM} 00:00:00` : null;
-const to = process.env.TO ? `${process.env.TO} 23:59:59` : null;
+const from = process.env.FROM ? `${process.env.FROM} 00:00:00` : `${getTodayYmd(30)} 23:59:59`;
+const to = process.env.TO ? `${process.env.TO} 23:59:59` : `${getTodayYmd(0)} 23:59:59`;
 
 listLeaveInstances(hrmAppId, hrmAppSecret, baseID, tableName, from, to);

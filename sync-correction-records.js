@@ -118,6 +118,6 @@ const baseID = env.LARK.BASE_ID;
 const tableName = process.env.TABLE_CORECTION_NAME;
 
 const from = process.env.FROM ? `${process.env.FROM} 00:00:00` : null;
-const to = process.env.TO ? `${process.env.TO} 23:59:59` : null;
+const to = process.env.TO ? `${process.env.TO} 23:59:59` : `${getTodayYmd(0)} 23:59:59`;
 
 listCorrectionInstances(hrmAppId, hrmAppSecret, baseID, tableName, from, to);
