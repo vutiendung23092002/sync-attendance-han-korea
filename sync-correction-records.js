@@ -6,16 +6,17 @@ import {
   getdetailsInstance,
 } from "./src/services/larkbase/attendance.js";
 import {
-    CORECTION_RECORD_FIELD_MAP,
+  CORECTION_RECORD_FIELD_MAP,
   CORECTION_RECORD_TYPE_MAP,
   CORECTION_RECORD_UI_TYPE_MAP,
   vnTimeToUTCTimestampMiliseconds,
   writeJsonFile,
+  getTodayYmd,
 } from "./src/utils/index.js";
 import { env } from "./src/config/env.js";
 
 import { formatCorrectionRecordsV2 } from "./src/utils/larkbase/corection-records-formated.js";
-import { syncDataToLarkBaseFilterDate } from "./src/services/larkbase/sync-to-lark.js"
+import { syncDataToLarkBaseFilterDate } from "./src/services/larkbase/sync-to-lark.js";
 
 async function listCorrectionInstances(
   hrmAppId,
@@ -88,27 +89,29 @@ async function listCorrectionInstances(
 
   const correctionFormarted = formatCorrectionRecordsV2(detailsCorrectionAll);
 
+  writeJsonFile("./logs/correctionV2-Formartted.json", correctionFormarted)
+
   const ONE_DAY = 24 * 60 * 60 * 1000; // ms
   const timestampFrom = vnTimeToUTCTimestampMiliseconds(from) - ONE_DAY;
   const timestampTo = vnTimeToUTCTimestampMiliseconds(to) + ONE_DAY;
 
   await syncDataToLarkBaseFilterDate(
-      clientHrm,
-      baseID,
-      {
-        tableName: tableName,
-        records: correctionFormarted,
-        fieldMap: CORECTION_RECORD_FIELD_MAP,
-        typeMap: CORECTION_RECORD_TYPE_MAP,
-        uiType: CORECTION_RECORD_UI_TYPE_MAP,
-        currencyCode: "VND",
-        idLabel: "Id",
-        excludeUpdateField: [],
-      },
-      "Submitted at",
-      timestampFrom,
-      timestampTo
-    );
+    clientHrm,
+    baseID,
+    {
+      tableName: tableName,
+      records: correctionFormarted,
+      fieldMap: CORECTION_RECORD_FIELD_MAP,
+      typeMap: CORECTION_RECORD_TYPE_MAP,
+      uiType: CORECTION_RECORD_UI_TYPE_MAP,
+      currencyCode: "VND",
+      idLabel: "Id",
+      excludeUpdateField: [],
+    },
+    "Submitted at",
+    timestampFrom,
+    timestampTo
+  );
 }
 
 const hrmAppId = env.LARK.hrm_app.app_id;
@@ -118,6 +121,8 @@ const baseID = env.LARK.BASE_ID;
 const tableName = process.env.TABLE_CORECTION_NAME;
 
 const from = process.env.FROM ? `${process.env.FROM} 00:00:00` : null;
-const to = process.env.TO ? `${process.env.TO} 23:59:59` : `${getTodayYmd(0)} 23:59:59`;
+const to = process.env.TO
+  ? `${process.env.TO} 23:59:59`
+  : `${getTodayYmd(0)} 23:59:59`;
 
 listCorrectionInstances(hrmAppId, hrmAppSecret, baseID, tableName, from, to);

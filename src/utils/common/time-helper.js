@@ -136,3 +136,8 @@ export function numberYmdToFullDate(num) {
   // trả về dạng đầy đủ
   return `${yyyy}/${mm}/${dd} 00:00:00`;
 }
+
+function vnLocalToUtcISOString(datetimeStr) {
+  // datetimeStr: "2025-12-04 17:30"
+  return new Date(datetimeStr.replace(" ", "T") + "+07:00").toISOString();
+}

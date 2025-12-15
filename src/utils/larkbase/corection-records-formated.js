@@ -79,8 +79,9 @@ export function formatCorrectionRecordsV2(records) {
 
       original_record: parsedForm[0]?.value?.widgetRemedyGroupV2ClockTime?.text,
       date_of_error: parsedForm[0]?.value?.widgetRemedyGroupV2RemedyDate?.text,
-      replenishment_time:
-        parsedForm[0]?.value?.widgetRemedyGroupV2RemedyTime?.text,
+      replenishment_time: vnLocalToUtcISOString(
+        parsedForm[0]?.value?.widgetRemedyGroupV2RemedyTime?.text
+      ),
       reason_for_correction: parsedForm[0]?.value?.widgetRemedyGroupV2Reason,
 
       reverted: item.reverted,
