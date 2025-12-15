@@ -9,7 +9,6 @@ import {
   vnTimeToUTCTimestampMiliseconds,
 } from "./src/utils/common/time-helper.js";
 import { env } from "./src/config/env.js";
-import { writeJsonFile } from "./src/utils/index.js";
 
 function getHourFromTimestamp(ts) {
   const d = new Date(ts);
@@ -25,7 +24,7 @@ async function checkCorrectionStatus(
   from,
   to
 ) {
-  console.log("=== BẮT ĐẦU CHECK TÌNH TRẠNG SỬA GIỜ ===");
+  console.log(`=== BẮT ĐẦU CHECK TÌNH TRẠNG SỬA GIỜ: ${from} - ${to} ===`);
 
   const ONE_DAY = 24 * 60 * 60 * 1000;
   const timestampFrom = vnTimeToUTCTimestampMiliseconds(from) - ONE_DAY;
@@ -44,8 +43,6 @@ async function checkCorrectionStatus(
     timestampTo
   );
 
-  writeJsonFile("./logs/attendance-records.json", attendanceRecords);
-
   // 2) Lấy correction
   const correctionRecords = await searchLarkRecordsFilterDate(
     clientHrm,
@@ -57,7 +54,6 @@ async function checkCorrectionStatus(
     timestampTo
   );
 
-  // 3) Map correction theo id_lookup
   // 3) Map correction theo id_lookup
   const correctionMap = {};
   for (const c of correctionRecords) {
@@ -79,8 +75,6 @@ async function checkCorrectionStatus(
       dateOfError: f["Date of error"],
     });
   }
-
-  writeJsonFile("./logs/correctionMap.json", correctionMap);
 
   // 4) Build list updates
   const updates = [];
@@ -129,8 +123,6 @@ async function checkCorrectionStatus(
       fields: updateField,
     });
   }
-
-  writeJsonFile("./logs/updates.json", updates);
 
   // 5) Update Lark
   if (updates.length > 0) {
