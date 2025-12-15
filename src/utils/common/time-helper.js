@@ -137,7 +137,7 @@ export function numberYmdToFullDate(num) {
   return `${yyyy}/${mm}/${dd} 00:00:00`;
 }
 
-function vnLocalToUtcISOString(datetimeStr) {
+export function vnLocalToUtcISOString(datetimeStr) {
   // datetimeStr: "2025-12-04 17:30"
   return new Date(datetimeStr.replace(" ", "T") + "+07:00").toISOString();
 }
