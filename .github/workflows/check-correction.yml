@@ -37,8 +37,8 @@ jobs:
 
       - name: Run check-correction-status.js
         env:
-          DATABASE_SERVICE_KEY: ${{ secrets.DATABASE_SERVICE_KEY }}
-          AES_256_CBC_APP_SECRET_KEY: ${{ secrets.AES_256_CBC_APP_SECRET_KEY }}
+          # DATABASE_SERVICE_KEY: ${{ secrets.DATABASE_SERVICE_KEY }}
+          # AES_256_CBC_APP_SECRET_KEY: ${{ secrets.AES_256_CBC_APP_SECRET_KEY }}
           LARK_HRM_APP_ID: ${{ secrets.LARK_HRM_APP_ID }}
           LARK_HRM_APP_SECRET: ${{ secrets.LARK_HRM_APP_SECRET }}
           LARK_BASE_ID: ${{ vars.LARK_BASE_ID }}
