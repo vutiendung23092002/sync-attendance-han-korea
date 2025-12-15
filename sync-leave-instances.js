@@ -2,7 +2,7 @@ import { createLarkClient } from "./src/core/larkbase-client.js";
 import { supabase } from "./src/core/supabase-client.js";
 import { decrypt } from "./src/utils/common/AES-256-CBC.js";
 import {
-  getListLeaveInstances,
+  getListInstances,
   getdetailsInstance,
 } from "./src/services/larkbase/attendance.js";
 import {
@@ -44,8 +44,8 @@ async function listLeaveInstances(
   const detailsInstanceAll = [];
 
   for (const c of client_attendance) {
-    if (!c.approval_code) {
-      console.log(`\n⚠️  ${c.ten_phong_ban} không có approval_code!`);
+    if (!c.approval_code_leave) {
+      console.log(`\n⚠️  ${c.ten_phong_ban} không có approval_code_leave!`);
       continue;
     }
     console.log("\n===============================================");
@@ -59,11 +59,11 @@ async function listLeaveInstances(
 
     const clientAtt = await createLarkClient(app_id, app_secret);
 
-    const instances = await getListLeaveInstances(
+    const instances = await getListInstances(
       clientAtt,
       vnTimeToUTCTimestampMiliseconds(from),
       vnTimeToUTCTimestampMiliseconds(to),
-      c.approval_code
+      c.approval_code_leave
     );
 
     console.log("Số instances phép nghỉ:", instances.length);

@@ -210,7 +210,7 @@ export async function syncCorrectionRecords(
   );
 }
 
-export async function getListLeaveInstances(client, from, to, approvalCode) {
+export async function getListInstances(client, from, to, approvalCode) {
   let instances = [];
   let pageToken = "";
 

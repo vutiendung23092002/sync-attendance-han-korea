@@ -122,7 +122,7 @@ export function getTodayYmd(subDays = 0) {
 export function ymdSlashToNumber(str) {
   if (!str) return null;
 
-  const clean = str.replaceAll("/", ""); // "20251205"
+  const clean = str.replace(/[\/-]/g, "");
   return Number(clean);
 }
 

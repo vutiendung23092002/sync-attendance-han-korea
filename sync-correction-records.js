@@ -1,21 +1,30 @@
-import { syncCorrectionRecords } from "./src/services/larkbase/attendance.js";
 import { createLarkClient } from "./src/core/larkbase-client.js";
-import { getTodayYmd } from "./src/utils/common/time-helper.js";
-import { decrypt } from "./src/utils/common/AES-256-CBC.js";
-import { env } from "./src/config/env.js";
 import { supabase } from "./src/core/supabase-client.js";
+import { decrypt } from "./src/utils/common/AES-256-CBC.js";
+import {
+  getListInstances,
+  getdetailsInstance,
+} from "./src/services/larkbase/attendance.js";
+import {
+    CORECTION_RECORD_FIELD_MAP,
+  CORECTION_RECORD_TYPE_MAP,
+  CORECTION_RECORD_UI_TYPE_MAP,
+  vnTimeToUTCTimestampMiliseconds,
+  writeJsonFile,
+} from "./src/utils/index.js";
+import { env } from "./src/config/env.js";
 
-async function syncCorectionRecords(
+import { formatCorrectionRecordsV2 } from "./src/utils/larkbase/corection-records-formated.js";
+import { syncDataToLarkBaseFilterDate } from "./src/services/larkbase/sync-to-lark.js"
+
+async function listCorrectionInstances(
   hrmAppId,
   hrmAppSecret,
   baseID,
-  tbCorectionNameHrm,
+  tableName,
   from,
   to
 ) {
-  console.log("=== BẮT ĐẦU SYNC TOÀN BỘ PHÒNG BAN ===");
-
-  // 1) Lấy danh sách tất cả apps Attendance đang ON
   const { data: client_attendance, error } = await supabase
     .from("client-attendance-hankor")
     .select()
@@ -29,59 +38,86 @@ async function syncCorectionRecords(
   // 2) Tạo HRM client (1 app duy nhất)
   const clientHrm = await createLarkClient(hrmAppId, hrmAppSecret);
 
-  // 3) Lặp qua từng client để sync
+  const detailsCorrectionAll = [];
+
   for (const c of client_attendance) {
-    try {
-      console.log("\n===============================================");
-      console.log(`>>> BẮT ĐẦU SYNC PHÒNG BAN: ${c.ten_phong_ban.trim()}`);
-      console.log("ID phòng ban:", c.id_phongban);
+    if (!c.approval_code_correction) {
+      console.log(
+        `\n⚠️  ${c.ten_phong_ban} không có approval_code_correction!`
+      );
+      continue;
+    }
 
-      // Giải mã app_id & secret
-      const app_id = decrypt(c.lark_app_id);
-      const app_secret = decrypt(c.lark_app_secret);
+    console.log("\n===============================================");
+    console.log(
+      `>>> BẮT ĐẦU ĐỒNG BỘ THÔNG TIN SỬA LỖI: ${c.ten_phong_ban.trim()}`
+    );
+    console.log("✅ Phòng ban:", c.ten_phong_ban.trim());
 
-      // Tạo client Attendance tương ứng
-      const clientAtt = await createLarkClient(app_id, app_secret);
+    const app_id = decrypt(c.lark_app_id);
+    const app_secret = decrypt(c.lark_app_secret);
 
-      console.log(">>> ĐÃ TẠO CLIENT ATTENDANCE");
+    const clientAtt = await createLarkClient(app_id, app_secret);
 
-      await syncCorrectionRecords(
+    const instances = await getListInstances(
+      clientAtt,
+      vnTimeToUTCTimestampMiliseconds(from),
+      vnTimeToUTCTimestampMiliseconds(to),
+      c.approval_code_correction
+    );
+
+    console.log("Số instances sửa lỗi:", instances.length);
+
+    const minimal = instances.map((x) => ({
+      user_id: x.instance.user_id,
+      instance_code: x.instance.code,
+    }));
+
+    for (const item of minimal) {
+      const details = await getdetailsInstance(
         clientAtt,
-        clientHrm,
-        baseID,
-        tbCorectionNameHrm,
-        c.id_phongban,
-        c.ten_phong_ban,
-        from,
-        to
+        item.instance_code,
+        item.user_id
       );
-
-      console.log(`>>> DONE PHÒNG BAN: ${c.ten_phong_ban.trim()}`);
-    } catch (err) {
-      console.error(
-        `🔥 LỖI KHI SYNC PHÒNG BAN ${c.ten_phong_ban.trim()}:`,
-        err
-      );
+      detailsCorrectionAll.push({
+        ...details?.data,
+        department_name: c.ten_phong_ban.trim(),
+      });
     }
   }
 
-  console.log("\n=== HOÀN TẤT SYNC TẤT CẢ PHÒNG BAN ===");
+  const correctionFormarted = formatCorrectionRecordsV2(detailsCorrectionAll);
+
+  const ONE_DAY = 24 * 60 * 60 * 1000; // ms
+  const timestampFrom = vnTimeToUTCTimestampMiliseconds(from) - ONE_DAY;
+  const timestampTo = vnTimeToUTCTimestampMiliseconds(to) + ONE_DAY;
+
+  await syncDataToLarkBaseFilterDate(
+      clientHrm,
+      baseID,
+      {
+        tableName: tableName,
+        records: correctionFormarted,
+        fieldMap: CORECTION_RECORD_FIELD_MAP,
+        typeMap: CORECTION_RECORD_TYPE_MAP,
+        uiType: CORECTION_RECORD_UI_TYPE_MAP,
+        currencyCode: "VND",
+        idLabel: "Id",
+        excludeUpdateField: [],
+      },
+      "Submitted at",
+      timestampFrom,
+      timestampTo
+    );
 }
 
 const hrmAppId = env.LARK.hrm_app.app_id;
 const hrmAppSecret = env.LARK.hrm_app.app_secret;
-
 const baseID = env.LARK.BASE_ID;
-const tbCorectionNameHrm = process.env.TABLE_CORECTION_NAME;
 
-const from = process.env.FROM ? process.env.FROM : null;
-const to = process.env.TO ? process.env.TO : null;
+const tableName = process.env.TABLE_CORECTION_NAME;
 
-syncCorectionRecords(
-  hrmAppId,
-  hrmAppSecret,
-  baseID,
-  tbCorectionNameHrm,
-  from,
-  to
-);
+const from = process.env.FROM ? `${process.env.FROM} 00:00:00` : null;
+const to = process.env.TO ? `${process.env.TO} 23:59:59` : null;
+
+listCorrectionInstances(hrmAppId, hrmAppSecret, baseID, tableName, from, to);
