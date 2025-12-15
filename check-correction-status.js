@@ -96,11 +96,24 @@ async function checkCorrectionStatus(
       const currentCheckIn = f["Check in time(TH)"];
       const currentCheckOut = f["Check out time(TH)"];
 
-      // Nếu đã cập nhật rồi thì bỏ
-      if (currentCheckIn === repl || currentCheckOut === repl) {
-        console.log(`--> Bỏ qua correction ${lookup} vì replenishment time đã được cập nhật`)
+      const checkInResult = f["Check in result(TH)"];
+      const checkOutResult = f["Check out result(TH)"];
+
+      const isCheckInAlreadyNormal =
+        currentCheckIn === repl && checkInResult === "Normal";
+
+      const isCheckOutAlreadyNormal =
+        currentCheckOut === repl && checkOutResult === "Normal";
+
+      // Chỉ bỏ qua khi đã đúng giờ + result = Normal
+      if (isCheckInAlreadyNormal || isCheckOutAlreadyNormal) {
+        console.log(
+          `--> Bỏ qua correction ${lookup} vì ${
+            isCheckInAlreadyNormal ? "check-in" : "check-out"
+          } đã được cập nhật và Normal`
+        );
         continue;
-      };
+      }
 
       // Nếu giờ < 12 => check-in
       if (hour < 12) {
