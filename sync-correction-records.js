@@ -59,6 +59,7 @@ async function listCorrectionInstances(
     const app_secret = decrypt(c.lark_app_secret);
 
     const clientAtt = await createLarkClient(app_id, app_secret);
+    console.log(from, to)
 
     const instances = await getListInstances(
       clientAtt,
@@ -120,7 +121,7 @@ const baseID = env.LARK.BASE_ID;
 
 const tableName = process.env.TABLE_CORECTION_NAME;
 
-const from = process.env.FROM ? `${process.env.FROM} 00:00:00` : null;
+const from = process.env.FROM ? `${process.env.FROM} 00:00:00` : `${getTodayYmd(30)} 23:59:59`;
 const to = process.env.TO
   ? `${process.env.TO} 23:59:59`
   : `${getTodayYmd(0)} 23:59:59`;
