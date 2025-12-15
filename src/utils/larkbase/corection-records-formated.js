@@ -4,6 +4,7 @@ import {
   numberYmdToFullDate,
   utcTimestampMsToVn,
   ymdSlashToNumber,
+  vnLocalToUtcISOString
 } from "../common/time-helper.js";
 
 export function formatCorrectionRecords(records) {
