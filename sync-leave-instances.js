@@ -6,6 +6,7 @@ import {
   getdetailsInstance,
 } from "./src/services/larkbase/attendance.js";
 import {
+  getTodayYmd,
   vnTimeToUTCTimestampMiliseconds,
   writeJsonFile,
 } from "./src/utils/index.js";
