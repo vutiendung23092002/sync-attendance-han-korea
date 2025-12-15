@@ -128,6 +128,20 @@ export function getStartOfMonthYmd() {
   return dayjs().tz("Asia/Ho_Chi_Minh").startOf("month").format("YYYY/MM/DD");
 }
 
+export function getFromDateSmart() {
+  const now = dayjs().tz("Asia/Ho_Chi_Minh");
+  const dayOfMonth = now.date(); // ngày trong tháng (1–31)
+
+  // Trước mùng 8
+  if (dayOfMonth < 8) {
+    return getTodayYmd(30);
+  }
+
+  // Từ mùng 8 trở đi
+  return getStartOfMonthYmd();
+}
+
+
 export function ymdSlashToNumber(str) {
   if (!str) return null;
 

@@ -7,7 +7,7 @@ import { createLarkClient } from "./src/core/larkbase-client.js";
 import {
   getTodayYmd,
   vnTimeToUTCTimestampMiliseconds,
-  getStartOfMonthYmd,
+  getFromDateSmart
 } from "./src/utils/common/time-helper.js";
 import { env } from "./src/config/env.js";
 
@@ -149,19 +149,6 @@ async function checkCorrectionStatus(
   } else {
     console.log("=== KHÔNG CÓ GÌ ĐỂ UPDATE ===");
   }
-}
-
-function getFromDateSmart() {
-  const now = dayjs().tz("Asia/Ho_Chi_Minh");
-  const dayOfMonth = now.date(); // ngày trong tháng (1–31)
-
-  // Trước mùng 8
-  if (dayOfMonth < 8) {
-    return getTodayYmd(30);
-  }
-
-  // Từ mùng 8 trở đi
-  return getStartOfMonthYmd();
 }
 
 const hrmAppId = env.LARK.hrm_app.app_id;
