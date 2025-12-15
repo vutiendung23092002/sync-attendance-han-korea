@@ -104,7 +104,6 @@ export function utcTimestampMsToVn(ts) {
   return `${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`;
 }
 
-
 export function vnTimeToUTCTimestampRaw(datetimeStr) {
   const normalized = datetimeStr.replace(/\//g, "-");
   const dateVN = new Date(normalized);
@@ -112,11 +111,21 @@ export function vnTimeToUTCTimestampRaw(datetimeStr) {
 }
 
 export function getTodayYmdhs(subDays = 0) {
-  return dayjs().tz("Asia/Ho_Chi_Minh").subtract(subDays, "day").format("YYYY/MM/DD HH:mm:ss");
+  return dayjs()
+    .tz("Asia/Ho_Chi_Minh")
+    .subtract(subDays, "day")
+    .format("YYYY/MM/DD HH:mm:ss");
 }
 
 export function getTodayYmd(subDays = 0) {
-  return dayjs().tz("Asia/Ho_Chi_Minh").subtract(subDays, "day").format("YYYY/MM/DD");
+  return dayjs()
+    .tz("Asia/Ho_Chi_Minh")
+    .subtract(subDays, "day")
+    .format("YYYY/MM/DD");
+}
+
+export function getStartOfMonthYmd() {
+  return dayjs().tz("Asia/Ho_Chi_Minh").startOf("month").format("YYYY/MM/DD");
 }
 
 export function ymdSlashToNumber(str) {

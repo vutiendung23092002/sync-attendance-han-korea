@@ -7,6 +7,7 @@ import { createLarkClient } from "./src/core/larkbase-client.js";
 import {
   getTodayYmd,
   vnTimeToUTCTimestampMiliseconds,
+  getStartOfMonthYmd,
 } from "./src/utils/common/time-helper.js";
 import { env } from "./src/config/env.js";
 
@@ -150,6 +151,19 @@ async function checkCorrectionStatus(
   }
 }
 
+function getFromDateSmart() {
+  const now = dayjs().tz("Asia/Ho_Chi_Minh");
+  const dayOfMonth = now.date(); // ngày trong tháng (1–31)
+
+  // Trước mùng 8
+  if (dayOfMonth < 8) {
+    return getTodayYmd(30);
+  }
+
+  // Từ mùng 8 trở đi
+  return getStartOfMonthYmd();
+}
+
 const hrmAppId = env.LARK.hrm_app.app_id;
 const hrmAppSecret = env.LARK.hrm_app.app_secret;
 const baseID = env.LARK.BASE_ID;
@@ -158,7 +172,7 @@ const tableCorectionRecordsId = process.env.TABLE_CORECTION_ID;
 
 const from = process.env.FROM
   ? `${process.env.FROM} 00:00:00`
-  : `${getTodayYmd(30)} 00:00:00`;
+  : `${getFromDateSmart()} 00:00:00`;
 
 const to = process.env.TO
   ? `${process.env.TO} 23:59:59`
