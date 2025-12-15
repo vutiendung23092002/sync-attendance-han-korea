@@ -13,6 +13,11 @@ function getMinutesFromHHMM(dateStr) {
   return hh * 60 + mm;
 }
 
+function normalizeResult(val) {
+  if (!val) return "";
+  return String(val).toLowerCase() === "todo" ? "" : val;
+}
+
 function calcMinutesLate(result, checkInTime, checkInShift) {
   // Điều kiện đặc biệt
   if (result === "Lack" || result === "NoNeedCheck") {
@@ -86,8 +91,7 @@ export function formatAttendanceResults(results) {
       check_in_shift_time: r.check_in_shift_time
         ? utcTimestampSToVn(r.check_in_shift_time)
         : "",
-      check_in_result: r.check_in_result ?? "",
-      // check_in_result_supplement: r.check_in_result_supplement ?? "",
+      check_in_result: normalizeResult(r.check_in_result),
 
       check_out_time: checkOut.check_time
         ? utcTimestampSToVn(checkOut.check_time)
@@ -95,8 +99,7 @@ export function formatAttendanceResults(results) {
       check_out_shift_time: r.check_out_shift_time
         ? utcTimestampSToVn(r.check_out_shift_time)
         : "",
-      check_out_result: r.check_out_result ?? "",
-      // check_out_result_supplement: r.check_out_result_supplement ?? "",
+      check_out_result: normalizeResult(r.check_out_result),
 
       minutes_late: calcMinutesLate(
         r.check_in_result,
