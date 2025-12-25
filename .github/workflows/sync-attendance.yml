@@ -5,9 +5,7 @@ name: Nodejs sync attendance
 
 on:
   schedule:
-    - cron: "0 2 * * *"   # chạy 09:00 VN (2:00 UTC)
-    - cron: "0 16 * * *"   # chạy 23:00 VN (16:00 UTC)
-    - cron: "30 9 * * *"  # chạy 16:30 VN (9:30 UTC)
+    - cron: "30 16 */2 * *"
   workflow_dispatch:
     inputs:
       TABLE_NAME_ATTENDANCE:
