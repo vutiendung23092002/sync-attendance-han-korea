@@ -1,6 +1,6 @@
 import {
   numberYmdToFullDate,
-  utcSecondsToVnTime,
+  utcTimestampSToVn,
   utcSecondsToVnTime
 } from "../common/time-helper.js";
 import { generateHash } from "../common/generate-hash.js";
