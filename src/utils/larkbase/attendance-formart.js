@@ -62,6 +62,7 @@ export function formatAttendanceResults(results) {
       }
     }
     late = late > 0 ? late : 0;
+    console.log(checkInShift, " - ", late);
 
     const lateAfter10 = Math.max(0, late - 10);
     const lateBefore10 = Math.min(late, 10);
