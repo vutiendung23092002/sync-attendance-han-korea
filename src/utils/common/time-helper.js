@@ -91,11 +91,10 @@ export function utcTimestampSToVn(ts) {
   return `${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`;
 }
 
-export function utcSecondsToVnTime(sec) {
-  const d = new Date(sec * 1000);
-  return d.toLocaleString("sv-SE", { timeZone: "Asia/Ho_Chi_Minh" }).replace(",", "");
+function toVnISO(dateStr) {
+  const d = new Date(dateStr + " +07:00");
+  return d.toISOString(); // sẽ tự có Z nhưng đúng thời điểm bạn tạo
 }
-
 
 export function utcTimestampMsToVn(ts) {
   const d = new Date(ts);

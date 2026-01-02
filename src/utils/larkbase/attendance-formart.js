@@ -1,7 +1,7 @@
 import {
   numberYmdToFullDate,
   utcTimestampSToVn,
-  utcSecondsToVnTime
+  toVnISO
 } from "../common/time-helper.js";
 import { generateHash } from "../common/generate-hash.js";
 
@@ -30,17 +30,17 @@ export function formatAttendanceResults(results) {
     const checkOut = r.check_out_record || {};
 
     const checkInTime = checkIn.check_time
-      ? utcSecondsToVnTime(checkIn.check_time)
+      ? toVnISO(checkIn.check_time)
       : "";
     const checkInShift = r.check_in_shift_time
-      ? utcSecondsToVnTime(r.check_in_shift_time)
+      ? toVnISO(r.check_in_shift_time)
       : "";
 
     const checkOutTime = checkOut.check_time
-      ? utcSecondsToVnTime(checkOut.check_time)
+      ? toVnISO(checkOut.check_time)
       : "";
     const checkOutShift = r.check_out_shift_time
-      ? utcSecondsToVnTime(r.check_out_shift_time)
+      ? toVnISO(r.check_out_shift_time)
       : "";
 
     const resIn = normalizeResult(r.check_in_result);
