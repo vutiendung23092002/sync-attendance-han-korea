@@ -91,7 +91,7 @@ export function utcTimestampSToVn(ts) {
   return `${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`;
 }
 
-function toVnISO(dateStr) {
+export function toVnISO(dateStr) {
   const d = new Date(dateStr + " +07:00");
   return d.toISOString(); // sẽ tự có Z nhưng đúng thời điểm bạn tạo
 }
