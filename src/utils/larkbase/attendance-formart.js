@@ -61,6 +61,9 @@ export function formatAttendanceResults(results) {
       }
     }
     late = late > 0 ? late : 0;
+    if(checkInShift="2025/12/22 08:00") {
+      console.log(late)
+    }
 
     const lateAfter10 = Math.max(0, late - 10);
     const lateBefore10 = Math.min(late, 10);
