@@ -19,9 +19,9 @@ function normalizeResult(val) {
 
 export function formatAttendanceResults(results) {
   const CUTOFF = 12 * 60 + 30; // 12:30
-  const SHIFT_PM_START = 13 * 60 + 30; // 13:30
-  const AM_END = 12 * 60; // 12:00
-  const PM_SHIFT_END = 17 * 60 + 30; // 17:30
+  const SHIFT_PM_BASE = 13 * 60 + 30; // 13:30
+  const AM_END_BASE = 12 * 60; // 12:00
+  const PM_END_BASE = 17 * 60 + 30; // 17:30
 
   return results.map((item) => {
     const r = item.records?.[0] ?? {};
@@ -49,21 +49,19 @@ export function formatAttendanceResults(results) {
     const outM = getMinutesFromHHMM(checkOutTime);
     const inShiftM = getMinutesFromHHMM(checkInShift);
 
-    // ---- TÍNH ĐI MUỘN CHECK IN ----
+    // ---- TÍNH MUỘN CHECK IN ----
     let late = 0;
     if (inM != null) {
-      if (inM < CUTOFF) {
-        // Ca sáng
+      if (inM <= CUTOFF) {
+        // Trước 12:30 → tính theo shift thật trong data
         late = inShiftM != null ? inM - inShiftM : 0;
       } else {
-        // Ca chiều
-        late = inM - SHIFT_PM_START;
+        // Sau 12:30 → ép vào ca chiều, late = giờ vào - 13:30
+        const diff = inM - SHIFT_PM_BASE;
+        late = diff > 0 ? diff : 0;
       }
     }
     late = late > 0 ? late : 0;
-    if(checkInShift="2025/12/22 08:00") {
-      console.log(late)
-    }
 
     const lateAfter10 = Math.max(0, late - 10);
     const lateBefore10 = Math.min(late, 10);
@@ -71,12 +69,14 @@ export function formatAttendanceResults(results) {
     // ---- TÍNH SỚM CHECK OUT ----
     let early = 0;
     if (outM != null) {
-      if (outM < CUTOFF) {
-        // Ca sáng kết thúc sớm
-        early = AM_END - outM;
+      if (outM <= CUTOFF) {
+        // Trước 12:30 → early = 12:00 - giờ ra
+        const diff = AM_END_BASE - outM;
+        early = diff > 0 ? diff : 0;
       } else {
-        // Ca chiều kết thúc sớm
-        early = PM_SHIFT_END - outM;
+        // Sau 12:30 → early = 17:30 - giờ ra
+        const diff = PM_END_BASE - outM;
+        early = diff > 0 ? diff : 0;
       }
     }
     early = early > 0 ? early : 0;
