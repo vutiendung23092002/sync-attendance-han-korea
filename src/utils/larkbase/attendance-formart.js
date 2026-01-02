@@ -1,7 +1,6 @@
 import {
   numberYmdToFullDate,
-  utcTimestampSToVn,
-  toVnISO
+  utcTimestampSToVn
 } from "../common/time-helper.js";
 import { generateHash } from "../common/generate-hash.js";
 
@@ -19,10 +18,11 @@ function normalizeResult(val) {
 }
 
 export function formatAttendanceResults(results) {
-  const CUTOFF = 12 * 60 + 30; // 12:30
-  const SHIFT_PM_BASE = 13 * 60 + 30; // 13:30
-  const AM_END_BASE = 12 * 60; // 12:00
-  const PM_END_BASE = 17 * 60 + 30; // 17:30
+  // Hạ mốc 12:30 thật xuống 5:30 vì helper của bạn trừ 7 tiếng
+  const CUTOFF = 5 * 60 + 30; // 05:30
+  const SHIFT_PM_BASE = 6 * 60 + 30; // 06:30 (tương đương 13:30 thật)
+  const AM_END_BASE = 5 * 60; // 05:00 (tương đương 12:00 thật)
+  const PM_END_BASE = 10 * 60 + 30; // 10:30 (tương đương 17:30 thật)
 
   return results.map((item) => {
     const r = item.records?.[0] ?? {};
@@ -30,40 +30,40 @@ export function formatAttendanceResults(results) {
     const checkOut = r.check_out_record || {};
 
     const checkInTime = checkIn.check_time
-      ? toVnISO(checkIn.check_time)
+      ? utcTimestampSToVn(checkIn.check_time)
       : "";
     const checkInShift = r.check_in_shift_time
-      ? toVnISO(r.check_in_shift_time)
+      ? utcTimestampSToVn(r.check_in_shift_time)
       : "";
 
     const checkOutTime = checkOut.check_time
-      ? toVnISO(checkOut.check_time)
+      ? utcTimestampSToVn(checkOut.check_time)
       : "";
     const checkOutShift = r.check_out_shift_time
-      ? toVnISO(r.check_out_shift_time)
+      ? utcTimestampSToVn(r.check_out_shift_time)
       : "";
 
     const resIn = normalizeResult(r.check_in_result);
     const resOut = normalizeResult(r.check_out_result);
 
     const inM = getMinutesFromHHMM(checkInTime);
+    const shiftM = getMinutesFromHHMM(checkInShift);
     const outM = getMinutesFromHHMM(checkOutTime);
-    const inShiftM = getMinutesFromHHMM(checkInShift);
 
     // ---- TÍNH MUỘN CHECK IN ----
     let late = 0;
     if (inM != null) {
-      if (inM <= CUTOFF) {
-        // Trước 12:30 → tính theo shift thật trong data
-        late = inShiftM != null ? inM - inShiftM : 0;
-      } else {
-        // Sau 12:30 → ép vào ca chiều, late = giờ vào - 13:30
+      if (inM > CUTOFF) {
+        // ca chiều → late = giờ vào - 13:30 thật (timeline 06:30)
         const diff = inM - SHIFT_PM_BASE;
+        late = diff > 0 ? diff : 0;
+      } else {
+        // ca sáng → late = giờ vào - shift API
+        const diff = inM - shiftM;
         late = diff > 0 ? diff : 0;
       }
     }
     late = late > 0 ? late : 0;
-    console.log(checkInShift, " - ",checkInTime, " - ", late);
 
     const lateAfter10 = Math.max(0, late - 10);
     const lateBefore10 = Math.min(late, 10);
@@ -71,13 +71,13 @@ export function formatAttendanceResults(results) {
     // ---- TÍNH SỚM CHECK OUT ----
     let early = 0;
     if (outM != null) {
-      if (outM <= CUTOFF) {
-        // Trước 12:30 → early = 12:00 - giờ ra
-        const diff = AM_END_BASE - outM;
+      if (outM > CUTOFF) {
+        // ca chiều → early = 17:30 thật (timeline 10:30) - giờ ra
+        const diff = PM_END_BASE - outM;
         early = diff > 0 ? diff : 0;
       } else {
-        // Sau 12:30 → early = 17:30 - giờ ra
-        const diff = PM_END_BASE - outM;
+        // ca sáng → early = 12:00 thật (timeline 05:00) - giờ ra
+        const diff = AM_END_BASE - outM;
         early = diff > 0 ? diff : 0;
       }
     }
