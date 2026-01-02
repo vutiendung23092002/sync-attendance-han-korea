@@ -91,7 +91,7 @@ export function utcTimestampSToVn(ts) {
   return `${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`;
 }
 
-function utcSecondsToVnTime(sec) {
+export function utcSecondsToVnTime(sec) {
   const d = new Date(sec * 1000);
   return d.toLocaleString("sv-SE", { timeZone: "Asia/Ho_Chi_Minh" }).replace(",", "");
 }
