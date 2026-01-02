@@ -8,7 +8,6 @@ function getMinutesFromHHMM(dateStr) {
   if (!dateStr) return null;
   const time = dateStr.split(" ")[1];
   if (!time) return null;
-
   const [hh, mm] = time.split(":").map(Number);
   return hh * 60 + mm;
 }
@@ -18,23 +17,48 @@ function normalizeResult(val) {
   return String(val).toLowerCase() === "todo" ? "" : val;
 }
 
-function calcMinutesLate(result, checkInTime, checkInShift) {
-  if (result === "lack" || result === "noneedcheck") return 0;
-  if (!checkInTime || !checkInShift) return 0;
+function calcMinutesLate(checkInResult, checkInTime) {
+  if (checkInResult === "lack" || checkInResult === "noneedcheck") return 0;
+  if (!checkInTime) return 0;
 
   const inMinutes = getMinutesFromHHMM(checkInTime);
-  const shiftMinutes = getMinutesFromHHMM(checkInShift);
-  if (inMinutes == null || shiftMinutes == null) return 0;
+  const CUTOFF = 12 * 60 + 30; // 12:30
+  const SHIFT_PM_BASE = 13 * 60 + 30; // 13:30
 
-  const diff = inMinutes - shiftMinutes;
-  return diff > 0 ? diff : 0;
+  // Nếu check in sau 12:30 → tính muộn từ 13:30
+  if (inMinutes > CUTOFF) {
+    return Math.max(0, inMinutes - SHIFT_PM_BASE);
+  }
+
+  // Nếu check in trước 12:30 → không tính muộn nữa theo ca sáng
+  return 0;
+}
+
+function calcMinutesEarly(checkOutResult, checkOutTime, checkOutShift) {
+  if (checkOutResult === "lack" || checkOutResult === "noneedcheck") return 0;
+  if (!checkOutTime) return 0;
+
+  const outMinutes = getMinutesFromHHMM(checkOutTime);
+  const CUTOFF = 12 * 60 + 30; // 12:30
+  const AM_END_BASE = 12 * 60; // 12:00
+
+  // Nếu check out trước 12:30 → tính sớm từ 12:00
+  if (outMinutes < CUTOFF) {
+    return Math.max(0, AM_END_BASE - outMinutes);
+  }
+
+  // Nếu check out sau 12:30 → tính sớm so với giờ shift ca chiều (giữ nguyên shift bạn truyền vào)
+  if (checkOutShift) {
+    const shiftMinutes = getMinutesFromHHMM(checkOutShift);
+    if (shiftMinutes != null && outMinutes != null) {
+      return Math.max(0, shiftMinutes - outMinutes);
+    }
+  }
+
+  return 0;
 }
 
 export function formatAttendanceResults(results) {
-  const CUTOFF = 12 * 60 + 30; // 12:30
-  const SHIFT_PM_START = 13 * 60 + 30; // 13:30
-  const SHIFT_AM_END = 12 * 60; // 12:00
-
   return results.map((item) => {
     const r = item.records?.[0] ?? {};
     const checkIn = r.check_in_record || {};
@@ -54,29 +78,19 @@ export function formatAttendanceResults(results) {
       ? utcTimestampSToVn(r.check_out_shift_time)
       : "";
 
-    const inM = getMinutesFromHHMM(checkInTime);
-    const outM = getMinutesFromHHMM(checkOutTime);
+    const checkInResult = normalizeResult(r.check_in_result);
+    const checkOutResult = normalizeResult(r.check_out_result);
 
-    const resIn = normalizeResult(r.check_in_result);
-    const resOut = normalizeResult(r.check_out_result);
+    const inMinutes = getMinutesFromHHMM(checkInTime);
+    const outMinutes = getMinutesFromHHMM(checkOutTime);
 
-    // Late theo cutoff 12:30
-    const minutesLate = inM > CUTOFF
-      ? Math.max(0, inM - SHIFT_PM_START)
-      : calcMinutesLate(resIn, checkInTime, checkInShift);
+    const rawLate = calcMinutesLate(checkInResult, checkInTime);
+    const rawEarly = calcMinutesEarly(checkOutResult, checkOutTime, checkOutShift);
 
-    const minutesLateAfter10m = inM > CUTOFF
-      ? Math.max(0, (inM - SHIFT_PM_START) - 10)
-      : Math.max(0, minutesLate - 10);
-
-    const minutesLateBefore10m = inM > CUTOFF
-      ? Math.min(Math.max(0, inM - SHIFT_PM_START), 10)
-      : Math.min(minutesLate, 10);
-
-    // Early checkout theo cutoff 12:30
-    const minutesEarly = outM < CUTOFF
-      ? Math.max(0, SHIFT_AM_END - outM)
-      : 0;
+    const minutesLate = rawLate;
+    const minutesLateAfter10m = Math.max(0, rawLate - 10);
+    const minutesLateBefore10m = Math.min(rawLate, 10);
+    const minutesEarly = rawEarly;
 
     const formatted = {
       day: numberYmdToFullDate(item.day),
@@ -86,11 +100,11 @@ export function formatAttendanceResults(results) {
 
       check_in_time: checkInTime,
       check_in_shift_time: checkInShift,
-      check_in_result: resIn,
+      check_in_result: checkInResult,
 
       check_out_time: checkOutTime,
       check_out_shift_time: checkOutShift,
-      check_out_result: resOut,
+      check_out_result: checkOutResult,
 
       minutes_late: minutesLate,
       minutes_late_after_10m: minutesLateAfter10m,
