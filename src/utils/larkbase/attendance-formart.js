@@ -17,48 +17,12 @@ function normalizeResult(val) {
   return String(val).toLowerCase() === "todo" ? "" : val;
 }
 
-function calcMinutesLate(checkInResult, checkInTime) {
-  if (checkInResult === "lack" || checkInResult === "noneedcheck") return 0;
-  if (!checkInTime) return 0;
-
-  const inMinutes = getMinutesFromHHMM(checkInTime);
-  const CUTOFF = 12 * 60 + 30; // 12:30
-  const SHIFT_PM_BASE = 13 * 60 + 30; // 13:30
-
-  // Nếu check in sau 12:30 → tính muộn từ 13:30
-  if (inMinutes > CUTOFF) {
-    return Math.max(0, inMinutes - SHIFT_PM_BASE);
-  }
-
-  // Nếu check in trước 12:30 → không tính muộn nữa theo ca sáng
-  return 0;
-}
-
-function calcMinutesEarly(checkOutResult, checkOutTime, checkOutShift) {
-  if (checkOutResult === "lack" || checkOutResult === "noneedcheck") return 0;
-  if (!checkOutTime) return 0;
-
-  const outMinutes = getMinutesFromHHMM(checkOutTime);
-  const CUTOFF = 12 * 60 + 30; // 12:30
-  const AM_END_BASE = 12 * 60; // 12:00
-
-  // Nếu check out trước 12:30 → tính sớm từ 12:00
-  if (outMinutes < CUTOFF) {
-    return Math.max(0, AM_END_BASE - outMinutes);
-  }
-
-  // Nếu check out sau 12:30 → tính sớm so với giờ shift ca chiều (giữ nguyên shift bạn truyền vào)
-  if (checkOutShift) {
-    const shiftMinutes = getMinutesFromHHMM(checkOutShift);
-    if (shiftMinutes != null && outMinutes != null) {
-      return Math.max(0, shiftMinutes - outMinutes);
-    }
-  }
-
-  return 0;
-}
-
 export function formatAttendanceResults(results) {
+  const CUTOFF = 12 * 60 + 30; // 12:30
+  const SHIFT_PM_START = 13 * 60 + 30; // 13:30
+  const AM_END = 12 * 60; // 12:00
+  const PM_SHIFT_END = 17 * 60 + 30; // 17:30
+
   return results.map((item) => {
     const r = item.records?.[0] ?? {};
     const checkIn = r.check_in_record || {};
@@ -78,19 +42,41 @@ export function formatAttendanceResults(results) {
       ? utcTimestampSToVn(r.check_out_shift_time)
       : "";
 
-    const checkInResult = normalizeResult(r.check_in_result);
-    const checkOutResult = normalizeResult(r.check_out_result);
+    const resIn = normalizeResult(r.check_in_result);
+    const resOut = normalizeResult(r.check_out_result);
 
-    const inMinutes = getMinutesFromHHMM(checkInTime);
-    const outMinutes = getMinutesFromHHMM(checkOutTime);
+    const inM = getMinutesFromHHMM(checkInTime);
+    const outM = getMinutesFromHHMM(checkOutTime);
+    const inShiftM = getMinutesFromHHMM(checkInShift);
 
-    const rawLate = calcMinutesLate(checkInResult, checkInTime);
-    const rawEarly = calcMinutesEarly(checkOutResult, checkOutTime, checkOutShift);
+    // ---- TÍNH ĐI MUỘN CHECK IN ----
+    let late = 0;
+    if (inM != null) {
+      if (inM < CUTOFF) {
+        // Ca sáng
+        late = inShiftM != null ? inM - inShiftM : 0;
+      } else {
+        // Ca chiều
+        late = inM - SHIFT_PM_START;
+      }
+    }
+    late = late > 0 ? late : 0;
 
-    const minutesLate = rawLate;
-    const minutesLateAfter10m = Math.max(0, rawLate - 10);
-    const minutesLateBefore10m = Math.min(rawLate, 10);
-    const minutesEarly = rawEarly;
+    const lateAfter10 = Math.max(0, late - 10);
+    const lateBefore10 = Math.min(late, 10);
+
+    // ---- TÍNH SỚM CHECK OUT ----
+    let early = 0;
+    if (outM != null) {
+      if (outM < CUTOFF) {
+        // Ca sáng kết thúc sớm
+        early = AM_END - outM;
+      } else {
+        // Ca chiều kết thúc sớm
+        early = PM_SHIFT_END - outM;
+      }
+    }
+    early = early > 0 ? early : 0;
 
     const formatted = {
       day: numberYmdToFullDate(item.day),
@@ -100,16 +86,16 @@ export function formatAttendanceResults(results) {
 
       check_in_time: checkInTime,
       check_in_shift_time: checkInShift,
-      check_in_result: checkInResult,
+      check_in_result: resIn,
 
       check_out_time: checkOutTime,
       check_out_shift_time: checkOutShift,
-      check_out_result: checkOutResult,
+      check_out_result: resOut,
 
-      minutes_late: minutesLate,
-      minutes_late_after_10m: minutesLateAfter10m,
-      minutes_late_before_10m: minutesLateBefore10m,
-      minutes_early: minutesEarly,
+      minutes_late: late,
+      minutes_late_after_10m: lateAfter10,
+      minutes_late_before_10m: lateBefore10,
+      minutes_early: early,
 
       id_lookup_correction: `${item.user_id}_${item.day}`,
       result_id: item.result_id,
