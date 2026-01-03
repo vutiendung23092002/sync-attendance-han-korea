@@ -88,6 +88,8 @@ async function listCorrectionInstances(
     }
   }
 
+  writeJsonFile("./logs/correctionV2.json", detailsCorrectionAll)
+
   const correctionFormarted = formatCorrectionRecordsV2(detailsCorrectionAll);
 
   writeJsonFile("./logs/correctionV2-Formartted.json", correctionFormarted)

@@ -4,9 +4,8 @@ import {
   numberYmdToFullDate,
   utcTimestampMsToVn,
   ymdSlashToNumber,
-  vnLocalToUtcISOString
+  vnLocalToUtcISOString,
 } from "../common/time-helper.js";
-
 
 function capitalizeFirst(str) {
   if (!str) return "";
@@ -33,6 +32,9 @@ export function formatCorrectionRecordsV2(records) {
         ? item.task_list[item.task_list.length - 1].node_name
         : null;
 
+    const remedy_time =
+      parsedForm[0]?.value?.widgetRemedyGroupV2RemedyTime?.text;
+
     const formatted = {
       id: `${item.approval_code}_${item.serial_number}`,
       serial_number: item.serial_number,
@@ -53,12 +55,15 @@ export function formatCorrectionRecordsV2(records) {
       approval_steps: approvalSteps,
       last_task_user_id: lastTaskUser,
 
-      original_record: parsedForm[0]?.value?.widgetRemedyGroupV2ClockTime?.text,
-      date_of_error: parsedForm[0]?.value?.widgetRemedyGroupV2RemedyDate?.text,
-      replenishment_time: vnLocalToUtcISOString(
-        parsedForm[0]?.value?.widgetRemedyGroupV2RemedyTime?.text
-      ),
-      reason_for_correction: parsedForm[0]?.value?.widgetRemedyGroupV2Reason,
+      original_record:
+        parsedForm[0]?.value?.widgetRemedyGroupV2ClockTime?.text || "",
+      date_of_error:
+        parsedForm[0]?.value?.widgetRemedyGroupV2RemedyDate?.text || "",
+      replenishment_time: remedy_time
+        ? vnLocalToUtcISOString(remedy_time)
+        : null,
+      reason_for_correction:
+        parsedForm[0]?.value?.widgetRemedyGroupV2Reason || "",
 
       reverted: item.reverted,
       id_lookup_correction: `${item.user_id}_${ymdSlashToNumber(
