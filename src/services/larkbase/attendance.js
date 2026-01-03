@@ -1,5 +1,4 @@
 import { formatAttendanceResults } from "../../utils/larkbase/attendance-formart.js";
-import { formatCorrectionRecords } from "../../utils/larkbase/corection-records-formated.js";
 import { syncDataToLarkBaseFilterDate } from "./sync-to-lark.js";
 import {
   ATTENDANCE_FIELD_MAP,
@@ -141,73 +140,6 @@ export async function getCorrectionRecords(client, userId, from, to) {
   });
 
   return res;
-}
-
-export async function syncCorrectionRecords(
-  clientAtt,
-  clientHrm,
-  baseIdHrm,
-  tbCorectionNameHrm,
-  departmentId,
-  departmentName,
-  from,
-  to
-) {
-  console.log(
-    `from: ${String(vnTimeToUtcTimestamp(`${from} 00:00:00`))} - to: ${String(
-      vnTimeToUtcTimestamp(`${to} 23:59:59`)
-    )}`
-  );
-  const employees = await getEmployee(clientAtt, departmentId);
-
-  if (!employees || employees.length === 0) {
-    console.warn(
-      `Không tìm thấy user nào trong phòng ban '${departmentId}' → bỏ qua.`
-    );
-    return;
-  }
-  const userIds = employees.map((u) => u.user_id);
-
-  const corectionRecords = await getCorrectionRecords(
-    clientAtt,
-    userIds,
-    String(vnTimeToUtcTimestamp(`${from} 00:00:00`)),
-    String(vnTimeToUtcTimestamp(`${to} 23:59:59`))
-  );
-
-  const corectionRecordRaw = corectionRecords?.data.user_remedys || [];
-
-  // const corectionRecordFormatted = formatCorrectionRecords(corectionRecordRaw);
-  const corectionRecordFormatted = formatCorrectionRecords(
-    corectionRecordRaw
-  ).map((r) => ({
-    ...r,
-    department_name: departmentName?.trim(),
-  }));
-
-  const ONE_DAY = 24 * 60 * 60 * 1000; // ms
-  const timestampFrom =
-    vnTimeToUTCTimestampMiliseconds(`${from} 00:00:00`) - ONE_DAY;
-  const timestampTo =
-    vnTimeToUTCTimestampMiliseconds(`${to} 23:59:59`) + ONE_DAY;
-
-  await syncDataToLarkBaseFilterDate(
-    clientHrm,
-    baseIdHrm,
-    {
-      tableName: tbCorectionNameHrm,
-      records: corectionRecordFormatted,
-      fieldMap: CORECTION_RECORD_FIELD_MAP,
-      typeMap: CORECTION_RECORD_TYPE_MAP,
-      uiType: CORECTION_RECORD_UI_TYPE_MAP,
-      currencyCode: "VND",
-      idLabel: "Id",
-      excludeUpdateField: [],
-    },
-    "Date of error",
-    timestampFrom,
-    timestampTo
-  );
 }
 
 export async function getListInstances(client, from, to, approvalCode) {
