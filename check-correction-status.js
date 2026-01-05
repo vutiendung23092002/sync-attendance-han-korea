@@ -145,6 +145,7 @@ async function checkCorrectionStatus(
   if (updates.length > 0) {
     console.log(`=== TIẾN HÀNH UPDATE ${updates.length} RECORDS ===`);
     await updateLarkRecords(clientHrm, baseID, tableAttendanceId, updates);
+    console.table(updates);
     console.log("=== UPDATE THÀNH CÔNG ===");
   } else {
     console.log("=== KHÔNG CÓ GÌ ĐỂ UPDATE ===");
