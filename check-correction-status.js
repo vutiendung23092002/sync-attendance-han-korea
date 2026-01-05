@@ -7,7 +7,7 @@ import { createLarkClient } from "./src/core/larkbase-client.js";
 import {
   getTodayYmd,
   vnTimeToUTCTimestampMiliseconds,
-  getFromDateSmart
+  getFromDateSmart,
 } from "./src/utils/common/time-helper.js";
 import { env } from "./src/config/env.js";
 
@@ -145,8 +145,14 @@ async function checkCorrectionStatus(
   if (updates.length > 0) {
     console.log(`=== TIẾN HÀNH UPDATE ${updates.length} RECORDS ===`);
     await updateLarkRecords(clientHrm, baseID, tableAttendanceId, updates);
-    console.table(updates);
-    console.log("=== UPDATE THÀNH CÔNG ===");
+    console.log("=== ID_LOOKUP_CORRECTION ĐÃ ĐƯỢC UPDATE ===");
+    for (const a of attendanceRecords) {
+      const lookup = a.fields["id_lookup_correction"]?.[0]?.text;
+      const isUpdated = updates.some((u) => u.record_id === a.record_id);
+      if (isUpdated && lookup) {
+        console.log("Lookup updated:", lookup);
+      }
+    }
   } else {
     console.log("=== KHÔNG CÓ GÌ ĐỂ UPDATE ===");
   }
