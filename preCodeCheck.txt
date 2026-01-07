@@ -11,6 +11,11 @@ import {
 } from "./src/utils/common/time-helper.js";
 import { env } from "./src/config/env.js";
 
+function getHourFromTimestamp(ts) {
+  const d = new Date(ts);
+  return (d.getUTCHours() + 7) % 24;
+}
+
 async function checkCorrectionStatus(
   hrmAppId,
   hrmAppSecret,
@@ -28,7 +33,7 @@ async function checkCorrectionStatus(
 
   const clientHrm = await createLarkClient(hrmAppId, hrmAppSecret);
 
-  // 1) Lấy attendance records
+  // 1) Lấy attendance
   const attendanceRecords = await searchLarkRecordsFilterDate(
     clientHrm,
     baseID,
@@ -39,7 +44,7 @@ async function checkCorrectionStatus(
     timestampTo
   );
 
-  // 2) Lấy correction records
+  // 2) Lấy correction
   const correctionRecords = await searchLarkRecordsFilterDate(
     clientHrm,
     baseID,
@@ -50,43 +55,33 @@ async function checkCorrectionStatus(
     timestampTo
   );
 
-  // 3) Map correction theo lookup ID và chỉ giữ Approved
+  // 3) Map correction theo id_lookup
   const correctionMap = {};
-  for (const record of correctionRecords) {
-    const f = record.fields;
+  for (const c of correctionRecords) {
+    const f = c.fields;
     const lookup = f["id_lookup_correction"]?.[0]?.text;
     if (!lookup) continue;
 
-    if (f["Status"] !== "Approved") {
-      console.log(`--> Skip correction ${lookup} vì chưa Approved`);
+    // Chỉ cho phép trạng thái APPROVED
+    const status = f["Status"];
+    if (status !== "Approved") {
+      console.log(`--> Bỏ qua correction ${lookup} vì Status = ${status}`);
       continue;
     }
 
-    // Parse Original record từ bảng correction
-    const originalRaw = f["Original record"];
-    let originalText = "";
-
-    if (Array.isArray(originalRaw)) {
-      originalText = originalRaw.map((i) => i.text).join(" ");
-    } else if (originalRaw && typeof originalRaw === "object") {
-      originalText = originalRaw.text || "";
-    } else if (typeof originalRaw === "string") {
-      originalText = originalRaw;
-    }
-
     if (!correctionMap[lookup]) correctionMap[lookup] = [];
+
     correctionMap[lookup].push({
       replenishment: f["Replenishment time"],
       dateOfError: f["Date of error"],
-      originalText,
     });
   }
 
-  // 4) Build list update fields
+  // 4) Build list updates
   const updates = [];
 
-  for (const attendance of attendanceRecords) {
-    const f = attendance.fields;
+  for (const a of attendanceRecords) {
+    const f = a.fields;
     const lookup = f["id_lookup_correction"]?.[0]?.text;
     if (!lookup) continue;
 
@@ -97,41 +92,51 @@ async function checkCorrectionStatus(
 
     for (const m of matches) {
       const repl = m.replenishment;
+      const hour = getHourFromTimestamp(repl);
 
       const currentCheckIn = f["Check in time(TH)"];
       const currentCheckOut = f["Check out time(TH)"];
+
       const checkInResult = f["Check in result(TH)"];
       const checkOutResult = f["Check out result(TH)"];
 
       const isCheckInAlreadyNormal =
         currentCheckIn === repl && checkInResult === "Normal";
+
       const isCheckOutAlreadyNormal =
         currentCheckOut === repl && checkOutResult === "Normal";
 
+      // Chỉ bỏ qua khi đã đúng giờ + result = Normal
       if (isCheckInAlreadyNormal || isCheckOutAlreadyNormal) {
-        console.log(`--> Skip correction ${lookup} vì đã Normal đúng giờ`);
+        console.log(
+          `--> Bỏ qua correction ${lookup} vì ${
+            isCheckInAlreadyNormal ? "check-in" : "check-out"
+          } đã được cập nhật và Normal`
+        );
         continue;
       }
 
-      const originalText = m.originalText || "";
-      console.log("Original correction text:", originalText);
-      if (originalText.toLowerCase().includes("start time")) {
+      // Nếu giờ < 12 => check-in
+      if (hour < 12) {
         updateField["Check in time(TH)"] = repl;
         updateField["Check in result(TH)"] = "Normal";
         updateField["Số phút đi muộn"] = 0;
         updateField["Sau 10p"] = 0;
         updateField["Trước 10p"] = 0;
-      } else if (originalText.toLowerCase().includes("end time")) {
+      }
+      // >= 12 => check-out
+      else {
         updateField["Check out time(TH)"] = repl;
         updateField["Check out result(TH)"] = "Normal";
         updateField["Số phút về sớm"] = 0;
       }
     }
 
+    // Nếu không có gì để update thì bỏ qua record
     if (Object.keys(updateField).length === 0) continue;
 
     updates.push({
-      record_id: attendance.record_id,
+      record_id: a.record_id,
       fields: updateField,
     });
   }
@@ -153,7 +158,6 @@ async function checkCorrectionStatus(
   }
 }
 
-// Env variables
 const hrmAppId = env.LARK.hrm_app.app_id;
 const hrmAppSecret = env.LARK.hrm_app.app_secret;
 const baseID = env.LARK.BASE_ID;
