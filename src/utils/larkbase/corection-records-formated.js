@@ -1,12 +1,9 @@
 import { generateHash } from "../common/generate-hash.js";
 import {
-  utcTimestampSToVn,
-  numberYmdToFullDate,
   utcTimestampMsToVn,
   ymdSlashToNumber,
   vnLocalToUtcISOString,
   utcISOStringToYmd,
-  safeVnLocalToUtcISOString
 } from "../common/time-helper.js";
 
 function capitalizeFirst(str) {
@@ -14,72 +11,6 @@ function capitalizeFirst(str) {
   const s = str.trim().toLowerCase();
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
-
-// export function formatCorrectionRecordsV2(records) {
-//   const correctionFormarted = records?.map((item) => {
-//     let parsedForm = null;
-//     try {
-//       parsedForm = item.form ? JSON.parse(item.form) : null;
-//     } catch (err) {
-//       console.log("❌ Lỗi parse form:", err.message);
-//     }
-
-//     const lastTaskUser =
-//       item.task_list?.length > 0
-//         ? item.task_list[item.task_list.length - 1].user_id
-//         : null;
-
-//     const approvalSteps =
-//       item.task_list?.length > 0
-//         ? item.task_list[item.task_list.length - 1].node_name
-//         : null;
-
-//     const remedy_time =
-//       parsedForm[0]?.value?.widgetRemedyGroupV2RemedyTime?.text;
-
-//     const formatted = {
-//       id: `${item.approval_code}_${item.serial_number}`,
-//       serial_number: item.serial_number,
-//       user_id: item.user_id, //----
-
-//       approval_name: item.approval_name, //----
-//       department_id: item.department_id,
-//       department_name: item.department_name,
-
-//       status: capitalizeFirst(item.status), //----
-
-//       submitted_at: utcTimestampMsToVn(Number(item.start_time)),
-//       completed_at:
-//         item.end_time === "0" || item.end_time === 0
-//           ? ""
-//           : utcTimestampMsToVn(Number(item.end_time)),
-
-//       approval_steps: approvalSteps,
-//       last_task_user_id: lastTaskUser,
-
-//       original_record:
-//         parsedForm[0]?.value?.widgetRemedyGroupV2ClockTime?.text || "",
-//       date_of_error:
-//         parsedForm[0]?.value?.widgetRemedyGroupV2RemedyDate?.text || "",
-//       replenishment_time: remedy_time
-//         ? vnLocalToUtcISOString(remedy_time)
-//         : null,
-//       reason_for_correction:
-//         parsedForm[0]?.value?.widgetRemedyGroupV2Reason || "",
-
-//       reverted: item.reverted,
-//       id_lookup_correction: `${item.user_id}_${ymdSlashToNumber(
-//         parsedForm[0]?.value?.widgetRemedyGroupV2RemedyDate?.text
-//       )}`,
-//     };
-
-//     formatted.hash = generateHash(formatted);
-
-//     return formatted;
-//   });
-
-//   return correctionFormarted;
-// }
 
 export function formatCorrectionRecordsV2(records) {
   const result = [];
@@ -190,7 +121,7 @@ export function formatCorrectionRecordsV2(records) {
 
       original_record: formValue.widgetRemedyGroupV2ClockTime?.text || "",
       date_of_error: remedyDate,
-      replenishment_time: remedyTime,
+      replenishment_time: remedyTime ? vnLocalToUtcISOString(remedyTime) : null,
       reason_for_correction: formValue.widgetRemedyGroupV2Reason || "",
 
       reverted: item.reverted,
