@@ -56,25 +56,87 @@ export async function getAttendanceResult(client, userId, from, to) {
   return res;
 }
 
-export async function syncAttendanceForDepartment(
+// export async function syncAttendanceForDepartment(
+//   clientAtt,
+//   clientHrm,
+//   baseIdHrm,
+//   tbNameHrm,
+//   departmentId,
+//   departmentName,
+//   from,
+//   to
+// ) {
+//   console.log(`from: ${ymdSlashToNumber(from)} - to: ${ymdSlashToNumber(to)}`);
+
+//   const employees = await getEmployee(clientAtt, departmentId);
+//   if (!employees || employees.length === 0) {
+//     console.warn(
+//       `Không tìm thấy user nào trong phòng ban '${departmentId}' → bỏ qua.`
+//     );
+//     return;
+//   }
+//   const userIds = employees.map((u) => u.user_id);
+
+//   const attendanceResult = await getAttendanceResult(
+//     clientAtt,
+//     userIds,
+//     ymdSlashToNumber(from),
+//     ymdSlashToNumber(to)
+//   );
+
+//   const attendanceRaw = attendanceResult?.data?.user_task_results || [];
+
+//   const attendanceFormatted = formatAttendanceResults(attendanceRaw).map(
+//     (r) => ({
+//       ...r,
+//       department_name: departmentName?.trim(),
+//     })
+//   );
+
+//   const ONE_DAY = 24 * 60 * 60 * 1000; // ms
+//   const timestampFrom =
+//     vnTimeToUTCTimestampMiliseconds(`${from} 00:00:00`) - ONE_DAY;
+//   const timestampTo =
+//     vnTimeToUTCTimestampMiliseconds(`${to} 23:59:59`) + ONE_DAY;
+
+//   await syncDataToLarkBaseFilterDate(
+//     clientHrm,
+//     baseIdHrm,
+//     {
+//       tableName: tbNameHrm,
+//       records: attendanceFormatted,
+//       fieldMap: ATTENDANCE_FIELD_MAP,
+//       typeMap: ATTENDANCE_TYPE_MAP,
+//       uiType: ATTENDANCE_UI_TYPE_MAP,
+//       currencyCode: "VND",
+//       idLabel: "Id",
+//       excludeUpdateField: [
+//         "Check in time(TH)",
+//         "Check out time(TH)",
+//         "Check in result(TH)",
+//         "Check out result(TH)",
+//         "Số phút đi muộn",
+//         "Sau 10p",
+//         "Trước 10p",
+//         "Số phút về sớm",
+//       ],
+//     },
+//     "Date(TH)",
+//     timestampFrom,
+//     timestampTo
+//   );
+// }
+
+export async function fetchAttendanceForDepartment(
   clientAtt,
-  clientHrm,
-  baseIdHrm,
-  tbNameHrm,
   departmentId,
   departmentName,
   from,
   to
 ) {
-  console.log(`from: ${ymdSlashToNumber(from)} - to: ${ymdSlashToNumber(to)}`);
-
   const employees = await getEmployee(clientAtt, departmentId);
-  if (!employees || employees.length === 0) {
-    console.warn(
-      `Không tìm thấy user nào trong phòng ban '${departmentId}' → bỏ qua.`
-    );
-    return;
-  }
+  if (!employees?.length) return [];
+
   const userIds = employees.map((u) => u.user_id);
 
   const attendanceResult = await getAttendanceResult(
@@ -86,46 +148,12 @@ export async function syncAttendanceForDepartment(
 
   const attendanceRaw = attendanceResult?.data?.user_task_results || [];
 
-  const attendanceFormatted = formatAttendanceResults(attendanceRaw).map(
-    (r) => ({
-      ...r,
-      department_name: departmentName?.trim(),
-    })
-  );
-
-  const ONE_DAY = 24 * 60 * 60 * 1000; // ms
-  const timestampFrom =
-    vnTimeToUTCTimestampMiliseconds(`${from} 00:00:00`) - ONE_DAY;
-  const timestampTo =
-    vnTimeToUTCTimestampMiliseconds(`${to} 23:59:59`) + ONE_DAY;
-
-  await syncDataToLarkBaseFilterDate(
-    clientHrm,
-    baseIdHrm,
-    {
-      tableName: tbNameHrm,
-      records: attendanceFormatted,
-      fieldMap: ATTENDANCE_FIELD_MAP,
-      typeMap: ATTENDANCE_TYPE_MAP,
-      uiType: ATTENDANCE_UI_TYPE_MAP,
-      currencyCode: "VND",
-      idLabel: "Id",
-      excludeUpdateField: [
-        "Check in time(TH)",
-        "Check out time(TH)",
-        "Check in result(TH)",
-        "Check out result(TH)",
-        "Số phút đi muộn",
-        "Sau 10p",
-        "Trước 10p",
-        "Số phút về sớm",
-      ],
-    },
-    "Date(TH)",
-    timestampFrom,
-    timestampTo
-  );
+  return formatAttendanceResults(attendanceRaw).map((r) => ({
+    ...r,
+    department_name: departmentName?.trim(),
+  }));
 }
+
 
 export async function getCorrectionRecords(client, userId, from, to) {
   const res = await client.attendance.userTaskRemedy.query({
