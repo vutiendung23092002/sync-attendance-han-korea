@@ -1,4 +1,4 @@
-name: Nodejs sync correction records
+name: Nodejs sync & check correction records
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       TABLE_CORECTION_NAME:
-        description: "Tên bảng cần kiểm tra"
+        description: "Tên bảng correction"
         required: true
         type: string
         
@@ -22,7 +22,7 @@ on:
 
 jobs:
   # =========================
-  # JOB CHÍNH: SYNC CORRECTION
+  # JOB 1: SYNC CORRECTION
   # =========================
   sync-correction-job:
     name: Sync correction records
@@ -30,16 +30,13 @@ jobs:
     environment: sync-correction
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: npm ci --only=production
+      - run: npm ci --only=production
 
       - name: Run sync-correction-records.js
         env:
@@ -56,7 +53,7 @@ jobs:
         run: node sync-correction-records.js
 
   # =========================
-  # JOB CALLBACK: BẮN WEBHOOK
+  # JOB 2: CALLBACK
   # =========================
   callback-job:
     name: Callback result
@@ -64,6 +61,9 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     environment: sync-correction
+
+    outputs:
+      conclusion: ${{ needs.sync-correction-job.result }}
 
     steps:
       - name: Send callback to webhook
@@ -84,6 +84,75 @@ jobs:
               job_id: $job_id,
               conclusion: $conclusion,
               table_name: $table_name,
+              from: $from,
+              to: $to
+            }' \
+          | curl -X POST "$CALLBACK_URL" \
+              -H "Content-Type: application/json" \
+              -d @-
+
+  # =========================
+  # JOB 3: CHECK STATUS
+  # =========================
+  check-correction-status-job:
+    name: Check correction status
+    needs: callback-job
+    runs-on: ubuntu-latest
+    environment: check-corection
+
+    #  CHỈ chạy khi sync thành công:
+    if: needs.callback-job.outputs.conclusion == 'success'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci --only=production
+
+      - name: Run check-correction-status.js
+        env:
+          LARK_HRM_APP_ID: ${{ secrets.LARK_HRM_APP_ID }}
+          LARK_HRM_APP_SECRET: ${{ secrets.LARK_HRM_APP_SECRET }}
+          LARK_BASE_ID: ${{ vars.LARK_BASE_ID }}
+          TABLE_ATTENDANCE_ID: ${{ vars.TABLE_ATTENDANCE_ID }}
+          TABLE_CORECTION_ID: ${{ vars.TABLE_CORECTION_ID }}
+
+          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
+          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+
+        run: node check-correction-status.js
+
+          # =========================
+  # JOB 4: CALLBACK STATUS
+  # =========================
+  callback-status-job:
+    name: Callback check status result
+    needs: check-correction-status-job
+    if: always()
+    runs-on: ubuntu-latest
+    environment: check-corection
+
+    steps:
+      - name: Send status callback to webhook
+        env:
+          CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
+
+          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
+          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+
+          CONCLUSION: ${{ needs.check-correction-status-job.result }}
+        run: |
+          jq -n \
+            --arg job_id "nodejs-check-correction-status.yml" \
+            --arg conclusion "$CONCLUSION" \
+            --arg from "$FROM" \
+            --arg to "$TO" \
+            '{
+              job_id: $job_id,
+              conclusion: $conclusion,
               from: $from,
               to: $to
             }' \
