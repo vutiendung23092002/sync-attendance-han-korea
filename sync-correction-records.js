@@ -24,7 +24,7 @@ import { syncDataToLarkBaseFilterDate } from "./src/services/larkbase/sync-to-la
  * CONCURRENCY CONFIG
  * ==========================
  */
-const DEPARTMENT_CONCURRENCY = 3; // số phòng ban chạy song song
+const DEPARTMENT_CONCURRENCY = 5; // số phòng ban chạy song song
 const DETAIL_CONCURRENCY = 5;     // số detail request song song / phòng ban
 
 const limitDepartment = pLimit(DEPARTMENT_CONCURRENCY);

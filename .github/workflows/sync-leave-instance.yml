@@ -1,6 +1,3 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
 name: Nodejs sync-leave-instances
 
 on:
@@ -24,7 +21,11 @@ on:
         type: string
 
 jobs:
-  sync-attendance-job:
+  # =========================
+  # JOB 1: SYNC LEAVE
+  # =========================
+  sync-leave-job:
+    name: Sync leave instances
     runs-on: ubuntu-latest
     environment: sync-instances
 
@@ -47,8 +48,47 @@ jobs:
           LARK_HRM_APP_ID: ${{ secrets.LARK_HRM_APP_ID }}
           LARK_HRM_APP_SECRET: ${{ secrets.LARK_HRM_APP_SECRET }}
           LARK_BASE_ID: ${{ vars.LARK_BASE_ID }}
+
           TABLE_INSTANCES_NAME: ${{ inputs.TABLE_INSTANCES_NAME != '' && inputs.TABLE_INSTANCES_NAME || vars.TABLE_INSTANCES_NAME }}
           FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
           TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
 
         run: node sync-leave-instances.js
+
+  # =========================
+  # JOB 2: CALLBACK
+  # =========================
+  callback-job:
+    name: Callback leave sync result
+    needs: sync-leave-job
+    if: always()
+    runs-on: ubuntu-latest
+    environment: sync-instances
+
+    steps:
+      - name: Send callback to webhook
+        env:
+          CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
+
+          TABLE_INSTANCES_NAME: ${{ inputs.TABLE_INSTANCES_NAME != '' && inputs.TABLE_INSTANCES_NAME || vars.TABLE_INSTANCES_NAME }}
+          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
+          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+
+          CONCLUSION: ${{ needs.sync-leave-job.result }}
+        run: |
+          jq -n \
+            --arg job_id "nodejs-sync-leave-instances.yml" \
+            --arg conclusion "$CONCLUSION" \
+            --arg table_name "$TABLE_INSTANCES_NAME" \
+            --arg from "$FROM" \
+            --arg to "$TO" \
+            '{
+              job_id: $job_id,
+              conclusion: $conclusion,
+              table_name: $table_name,
+              from: $from,
+              to: $to
+            }' \
+          | curl -X POST "$CALLBACK_URL" \
+              -H "Content-Type: application/json" \
+              -d @-
