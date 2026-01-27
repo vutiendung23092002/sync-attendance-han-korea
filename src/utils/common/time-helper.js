@@ -146,7 +146,6 @@ export function getFromDateSmart() {
   return getStartOfMonthYmd();
 }
 
-
 export function ymdSlashToNumber(str) {
   if (!str) return null;
 
@@ -168,4 +167,57 @@ export function numberYmdToFullDate(num) {
 export function vnLocalToUtcISOString(datetimeStr) {
   // datetimeStr: "2025-12-04 17:30"
   return new Date(datetimeStr.replace(" ", "T") + "+07:00").toISOString();
+}
+
+export function utcISOStringToYmd(isoString) {
+  if (!isoString) return "";
+
+  const date = new Date(isoString);
+
+  // chuyển sang giờ VN (+7)
+  const vnTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+
+  const yyyy = vnTime.getFullYear();
+  const mm = String(vnTime.getMonth() + 1).padStart(2, "0");
+  const dd = String(vnTime.getDate()).padStart(2, "0");
+
+  return `${yyyy}/${mm}/${dd}`;
+}
+
+export function safeVnLocalToUtcISOString(input) {
+  if (!input) return null;
+
+  // nếu là object { text, value }
+  if (typeof input === "object") {
+    if (typeof input.value === "number") {
+      const d = new Date(input.value);
+      return isNaN(d.getTime()) ? null : d.toISOString();
+    }
+
+    if (typeof input.text === "string") {
+      return safeVnLocalToUtcISOString(input.text);
+    }
+
+    return null;
+  }
+
+  if (typeof input !== "string") return null;
+
+  // chỉ accept format: YYYY-MM-DD HH:mm
+  const match = input.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/);
+  if (!match) return null;
+
+  const [, y, m, d, h, min] = match;
+
+  const vnDate = new Date(
+    Number(y),
+    Number(m) - 1,
+    Number(d),
+    Number(h),
+    Number(min),
+  );
+
+  return isNaN(vnDate.getTime())
+    ? null
+    : new Date(vnDate.getTime() - 7 * 60 * 60 * 1000).toISOString();
 }
