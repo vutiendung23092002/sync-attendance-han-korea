@@ -1,7 +1,4 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Nodejs sync corerection records
+name: Nodejs sync correction records
 
 on:
   schedule:
@@ -24,7 +21,11 @@ on:
         type: string
 
 jobs:
+  # =========================
+  # JOB CHÍNH: SYNC CORRECTION
+  # =========================
   sync-correction-job:
+    name: Sync correction records
     runs-on: ubuntu-latest
     environment: sync-correction
 
@@ -47,8 +48,45 @@ jobs:
           LARK_HRM_APP_ID: ${{ secrets.LARK_HRM_APP_ID }}
           LARK_HRM_APP_SECRET: ${{ secrets.LARK_HRM_APP_SECRET }}
           LARK_BASE_ID: ${{ vars.LARK_BASE_ID }}
+
           TABLE_CORECTION_NAME: ${{ inputs.TABLE_CORECTION_NAME != '' && inputs.TABLE_CORECTION_NAME || vars.TABLE_CORECTION_NAME }}
           FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
           TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
 
         run: node sync-correction-records.js
+
+  # =========================
+  # JOB CALLBACK: BẮN WEBHOOK
+  # =========================
+  callback-job:
+    name: Callback result
+    needs: sync-correction-job
+    if: always()
+    runs-on: ubuntu-latest
+    environment: sync-correction
+
+    steps:
+      - name: Send callback to webhook
+        env:
+          CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
+          TABLE_CORECTION_NAME: ${{ inputs.TABLE_CORECTION_NAME != '' && inputs.TABLE_CORECTION_NAME || vars.TABLE_CORECTION_NAME }}
+          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
+          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+          CONCLUSION: ${{ needs.sync-correction-job.result }}
+        run: |
+          jq -n \
+            --arg job_id "nodejs-sync-correction-records.yml" \
+            --arg conclusion "$CONCLUSION" \
+            --arg table_name "$TABLE_CORECTION_NAME" \
+            --arg from "$FROM" \
+            --arg to "$TO" \
+            '{
+              job_id: $job_id,
+              conclusion: $conclusion,
+              table_name: $table_name,
+              from: $from,
+              to: $to
+            }' \
+          | curl -X POST "$CALLBACK_URL" \
+              -H "Content-Type: application/json" \
+              -d @-
