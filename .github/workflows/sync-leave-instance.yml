@@ -2,7 +2,7 @@ name: Nodejs sync-leave-instances
 
 on:
   schedule:
-    - cron: "30 16 */1 * *"
+    - cron: "30 14 */1 * *"
   workflow_dispatch:
     inputs:
       TABLE_INSTANCES_NAME:
