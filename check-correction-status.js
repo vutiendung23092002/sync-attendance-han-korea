@@ -11,6 +11,26 @@ import {
 } from "./src/utils/common/time-helper.js";
 import { env } from "./src/config/env.js";
 
+function toMinutes(timeVal) {
+  if (!timeVal) return null;
+
+  // Lark trả về ms timestamp
+  const d = new Date(timeVal);
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+
+function sameTime(a, b) {
+  if (!a || !b) return false;
+  return toMinutes(a) === toMinutes(b);
+}
+
+function classifyLate(late) {
+  if (late === 0) return "Normal";
+  if (late <= 10) return "Late";
+  return "SeriousLate";
+}
+
 async function checkCorrectionStatus(
   hrmAppId,
   hrmAppSecret,
@@ -18,7 +38,7 @@ async function checkCorrectionStatus(
   tableAttendanceId,
   tableCorectionRecordsId,
   from,
-  to
+  to,
 ) {
   console.log(`=== BẮT ĐẦU CHECK TÌNH TRẠNG SỬA GIỜ: ${from} - ${to} ===`);
 
@@ -36,7 +56,7 @@ async function checkCorrectionStatus(
     1000,
     "Date(TH)",
     timestampFrom,
-    timestampTo
+    timestampTo,
   );
 
   // 2) Lấy correction records
@@ -47,7 +67,7 @@ async function checkCorrectionStatus(
     1000,
     "Date of error",
     timestampFrom,
-    timestampTo
+    timestampTo,
   );
 
   // 3) Map correction theo lookup ID và chỉ giữ Approved
@@ -103,28 +123,54 @@ async function checkCorrectionStatus(
       const checkInResult = f["Check in result(TH)"];
       const checkOutResult = f["Check out result(TH)"];
 
-      const isCheckInAlreadyNormal =
-        currentCheckIn === repl && checkInResult === "Normal";
-      const isCheckOutAlreadyNormal =
-        currentCheckOut === repl && checkOutResult === "Normal";
+      // console.log(currentCheckIn)
 
-      if (isCheckInAlreadyNormal || isCheckOutAlreadyNormal) {
-        console.log(`--> Skip correction ${lookup} vì đã Normal đúng giờ`);
-        continue;
-      }
+      // const isCheckInAlreadyNormal =
+      //   currentCheckIn === repl && checkInResult === "Normal";
+      // const isCheckOutAlreadyNormal =
+      //   currentCheckOut === repl && checkOutResult === "Normal";
+
+      // if (isCheckInAlreadyNormal || isCheckOutAlreadyNormal) {
+      //   console.log(`--> Skip correction ${lookup} vì đã Normal đúng giờ`);
+      //   continue;
+      // }
 
       const originalText = m.originalText || "";
       console.log("Original correction text:", originalText);
       if (originalText.toLowerCase().includes("start time")) {
+        const isSame = sameTime(f["Check in time(TH)"], repl);
+        if (isSame) {
+          console.log(`--> Skip ${lookup} vì check-in đã đúng giờ`);
+          continue;
+        }
+
+        const shiftIn = f["Check in shift time(TH)"];
+        const replMin = toMinutes(repl);
+        const shiftMin = toMinutes(shiftIn);
+
+        const late = Math.max(0, replMin - shiftMin);
+
         updateField["Check in time(TH)"] = repl;
-        updateField["Check in result(TH)"] = "Normal";
-        updateField["Số phút đi muộn"] = 0;
-        updateField["Sau 10p"] = 0;
-        updateField["Trước 10p"] = 0;
+        updateField["Check in result(TH)"] = classifyLate(late);
+        updateField["Số phút đi muộn"] = late;
+        updateField["Trước 10p"] = Math.min(late, 10);
+        updateField["Sau 10p"] = late > 10 ? late - 10 : 0;
       } else if (originalText.toLowerCase().includes("end time")) {
+        const isSame = sameTime(f["Check out time(TH)"], repl);
+        if (isSame) {
+          console.log(`--> Skip ${lookup} vì check-out đã đúng giờ`);
+          continue;
+        }
+
+        const shiftOut = f["Check out shift time(TH)"];
+        const replMin = toMinutes(repl);
+        const shiftMin = toMinutes(shiftOut);
+
+        const early = Math.max(0, shiftMin - replMin);
+
         updateField["Check out time(TH)"] = repl;
-        updateField["Check out result(TH)"] = "Normal";
-        updateField["Số phút về sớm"] = 0;
+        updateField["Check out result(TH)"] = early === 0 ? "Normal" : "Early";
+        updateField["Số phút về sớm"] = early;
       }
     }
 
@@ -175,5 +221,5 @@ checkCorrectionStatus(
   tableAttendanceId,
   tableCorectionRecordsId,
   from,
-  to
+  to,
 );
