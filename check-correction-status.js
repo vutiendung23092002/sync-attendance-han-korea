@@ -118,23 +118,6 @@ async function checkCorrectionStatus(
     for (const m of matches) {
       const repl = m.replenishment;
 
-      const currentCheckIn = f["Check in time(TH)"];
-      const currentCheckOut = f["Check out time(TH)"];
-      const checkInResult = f["Check in result(TH)"];
-      const checkOutResult = f["Check out result(TH)"];
-
-      // console.log(currentCheckIn)
-
-      // const isCheckInAlreadyNormal =
-      //   currentCheckIn === repl && checkInResult === "Normal";
-      // const isCheckOutAlreadyNormal =
-      //   currentCheckOut === repl && checkOutResult === "Normal";
-
-      // if (isCheckInAlreadyNormal || isCheckOutAlreadyNormal) {
-      //   console.log(`--> Skip correction ${lookup} vì đã Normal đúng giờ`);
-      //   continue;
-      // }
-
       const originalText = m.originalText || "";
       console.log("Original correction text:", originalText);
       if (originalText.toLowerCase().includes("start time")) {
@@ -167,6 +150,7 @@ async function checkCorrectionStatus(
         const shiftMin = toMinutes(shiftOut);
 
         const early = Math.max(0, shiftMin - replMin);
+        console.log("Calculated early minutes:", early);
 
         updateField["Check out time(TH)"] = repl;
         updateField["Check out result(TH)"] = early === 0 ? "Normal" : "Early";
@@ -185,6 +169,7 @@ async function checkCorrectionStatus(
   // 5) Update Lark
   if (updates.length > 0) {
     console.log(`=== TIẾN HÀNH UPDATE ${updates.length} RECORDS ===`);
+    console.log("Updates:", updates);
     await updateLarkRecords(clientHrm, baseID, tableAttendanceId, updates);
     console.log("=== ID_LOOKUP_CORRECTION ĐÃ ĐƯỢC UPDATE ===");
     for (const a of attendanceRecords) {
