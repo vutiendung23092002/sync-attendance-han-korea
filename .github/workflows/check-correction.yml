@@ -4,6 +4,8 @@
 name: Nodejs check-corection-status
 
 on:
+  schedule:
+    - cron: "30 14 */1 * *"
   workflow_dispatch:
     inputs:
       FROM:

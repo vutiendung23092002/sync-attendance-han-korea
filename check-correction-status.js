@@ -121,11 +121,11 @@ async function checkCorrectionStatus(
       const originalText = m.originalText || "";
       console.log("Original correction text:", originalText);
       if (originalText.toLowerCase().includes("start time")) {
-        const isSame = sameTime(f["Check in time(TH)"], repl);
-        if (isSame) {
-          console.log(`--> Skip ${lookup} vì check-in đã đúng giờ`);
-          continue;
-        }
+        // const isSame = sameTime(f["Check in time(TH)"], repl);
+        // if (isSame) {
+        //   console.log(`--> Skip ${lookup} vì check-in đã đúng giờ`);
+        //   continue;
+        // }
 
         const shiftIn = f["Check in shift time(TH)"];
         const replMin = toMinutes(repl);
@@ -139,11 +139,11 @@ async function checkCorrectionStatus(
         updateField["Trước 10p"] = Math.min(late, 10);
         updateField["Sau 10p"] = late > 10 ? late - 10 : 0;
       } else if (originalText.toLowerCase().includes("end time")) {
-        const isSame = sameTime(f["Check out time(TH)"], repl);
-        if (isSame) {
-          console.log(`--> Skip ${lookup} vì check-out đã đúng giờ`);
-          continue;
-        }
+        // const isSame = sameTime(f["Check out time(TH)"], repl);
+        // if (isSame) {
+        //   console.log(`--> Skip ${lookup} vì check-out đã đúng giờ`);
+        //   continue;
+        // }
 
         const shiftOut = f["Check out shift time(TH)"];
         const replMin = toMinutes(repl);
