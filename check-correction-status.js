@@ -130,8 +130,8 @@ async function checkCorrectionStatus(
         const replMin = toMinutes(repl);
 
         let shiftMin = toMinutes(shiftIn);
-        if (shiftMin === 8 * 60 && replMin > 12 * 60 + 30) {
-          shiftMin = 13 * 60 + 30;
+        if (shiftMin === 1 * 60 && replMin > 5 * 60 + 30) {
+          shiftMin = 6 * 60 + 30;
         }
 
         
@@ -154,8 +154,8 @@ async function checkCorrectionStatus(
         const replMout = toMinutes(repl);
         let shiftMout = toMinutes(shiftOut);
 
-        if (shiftMout >= 17 * 60 + 30 && replMout < 12 * 60 + 30) {
-          shiftMout = 12 * 60;
+        if (shiftMout >= 1 * 60 + 30 && replMout < 5 * 60 + 30) {
+          shiftMout = 5 * 60;
         }
 
         const early = Math.max(0, shiftMout - replMout);
