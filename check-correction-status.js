@@ -19,7 +19,6 @@ function toMinutes(timeVal) {
   return d.getHours() * 60 + d.getMinutes();
 }
 
-
 function sameTime(a, b) {
   if (!a || !b) return false;
   return toMinutes(a) === toMinutes(b);
@@ -119,7 +118,7 @@ async function checkCorrectionStatus(
       const repl = m.replenishment;
 
       const originalText = m.originalText || "";
-      console.log("Original correction text:", originalText);
+      // console.log("Original correction text:", originalText);
       if (originalText.toLowerCase().includes("start time")) {
         // const isSame = sameTime(f["Check in time(TH)"], repl);
         // if (isSame) {
@@ -129,8 +128,12 @@ async function checkCorrectionStatus(
 
         const shiftIn = f["Check in shift time(TH)"];
         const replMin = toMinutes(repl);
-        const shiftMin = toMinutes(shiftIn);
+        let shiftMin = toMinutes(shiftIn);
+        if (shiftMin === 8 * 60 && replMin > 12 * 60 + 30) {
+          shiftMin = 13 * 60 + 30;
+        }
 
+        
         const late = Math.max(0, replMin - shiftMin);
 
         updateField["Check in time(TH)"] = repl;
@@ -146,11 +149,16 @@ async function checkCorrectionStatus(
         // }
 
         const shiftOut = f["Check out shift time(TH)"];
-        const replMin = toMinutes(repl);
-        const shiftMin = toMinutes(shiftOut);
+        const replMout = toMinutes(repl);
+        let shiftMout = toMinutes(shiftOut);
 
-        const early = Math.max(0, shiftMin - replMin);
-        console.log("Calculated early minutes:", early);
+        if (shiftMout >= 17 * 60 + 30 && replMout < 12 * 60 + 30) {
+          shiftMout = 12 * 60;
+        }
+
+        const early = Math.max(0, shiftMout - replMout);
+        // console.log("Calculated replMout:", replMout, " - shiftMout:", shiftMout, " - Early: ", early, " - for record:", lookup);
+        // console.log("Calculated early minutes:", early);
 
         updateField["Check out time(TH)"] = repl;
         updateField["Check out result(TH)"] = early === 0 ? "Normal" : "Early";
@@ -165,6 +173,8 @@ async function checkCorrectionStatus(
       fields: updateField,
     });
   }
+
+  // console.log("Updates:", updates);
 
   // 5) Update Lark
   if (updates.length > 0) {
