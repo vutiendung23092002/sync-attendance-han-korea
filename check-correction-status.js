@@ -128,6 +128,7 @@ async function checkCorrectionStatus(
 
         const shiftIn = f["Check in shift time(TH)"];
         const replMin = toMinutes(repl);
+
         let shiftMin = toMinutes(shiftIn);
         if (shiftMin === 8 * 60 && replMin > 12 * 60 + 30) {
           shiftMin = 13 * 60 + 30;
@@ -135,6 +136,7 @@ async function checkCorrectionStatus(
 
         
         const late = Math.max(0, replMin - shiftMin);
+        console.log("Calculated replMin:", replMin, " - shiftMin:", shiftMin, " - Late: ", late, " - for record:", lookup);
 
         updateField["Check in time(TH)"] = repl;
         updateField["Check in result(TH)"] = classifyLate(late);
