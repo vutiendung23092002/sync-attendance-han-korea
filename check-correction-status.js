@@ -130,7 +130,7 @@ async function checkCorrectionStatus(
         const replMin = toMinutes(repl);
 
         let shiftMin = toMinutes(shiftIn);
-        if (shiftMin === 1 * 60 && replMin > 5 * 60 + 30) {
+        if (shiftMin === 1 * 60 && replMin > 5 * 60 + 30) { // trừ 7 tiếng vì chạy trên github action, nên giờ ca sáng sẽ bị lệch thành 1h sáng, nhưng vẫn tính đi muộn nếu check-in sau 6:30
           shiftMin = 6 * 60 + 30;
         }
 
@@ -154,7 +154,7 @@ async function checkCorrectionStatus(
         const replMout = toMinutes(repl);
         let shiftMout = toMinutes(shiftOut);
 
-        if (shiftMout >= 1 * 60 + 30 && replMout < 5 * 60 + 30) {
+        if (shiftMout >= 10 * 60 + 30 && replMout < 5 * 60 + 30) {
           shiftMout = 5 * 60;
         }
 
