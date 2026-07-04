@@ -1,6 +1,38 @@
 import * as larkbaseService from "./index.js";
 import * as utils from "../../utils/index.js";
 
+const RESULT_FIELDS_ALLOW_NORMAL_UPDATE = new Set([
+  "Check in result(TH)",
+  "Check out result(TH)",
+]);
+
+function normalizeLarkFieldText(value) {
+  if (value === undefined || value === null) return "";
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => normalizeLarkFieldText(item))
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+  }
+
+  if (typeof value === "object") {
+    return String(value.text ?? value.value ?? "").trim();
+  }
+
+  return String(value).trim();
+}
+
+function shouldAllowExcludedFieldUpdate(fieldLabel, oldValue, newValue) {
+  if (!RESULT_FIELDS_ALLOW_NORMAL_UPDATE.has(fieldLabel)) return false;
+
+  const oldText = normalizeLarkFieldText(oldValue).toLowerCase();
+  const newText = normalizeLarkFieldText(newValue).toLowerCase();
+
+  return newText === "normal" && oldText !== "noneedcheck";
+}
+
 /**
  * Đồng bộ dữ liệu vào LarkBase có filter theo khoảng ngày
  */
@@ -143,7 +175,17 @@ export async function syncDataToLarkBaseFilterDate(
             !(Array.isArray(oldVal) && oldVal.length === 0);
 
           // Nếu có dữ liệu cũ → không update field này
-          if (hasOldValue && mapped[fldLabel] !== undefined) {
+          const canUpdateExcludedField = shouldAllowExcludedFieldUpdate(
+            fldLabel,
+            oldVal,
+            mapped[fldLabel]
+          );
+
+          if (
+            hasOldValue &&
+            mapped[fldLabel] !== undefined &&
+            !canUpdateExcludedField
+          ) {
             delete mapped[fldLabel];
           }
         });

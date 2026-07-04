@@ -2,7 +2,7 @@ name: Nodejs sync attendance
 
 on:
   schedule:
-    - cron: "30 14 */1 * *"
+    - cron: "30 20 * * *"
   workflow_dispatch:
     inputs:
       TABLE_NAME_ATTENDANCE:
@@ -44,14 +44,15 @@ jobs:
       - name: Run sync-attendance.js
         env:
           DATABASE_SERVICE_KEY: ${{ secrets.DATABASE_SERVICE_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           AES_256_CBC_APP_SECRET_KEY: ${{ secrets.AES_256_CBC_APP_SECRET_KEY }}
           LARK_HRM_APP_ID: ${{ secrets.LARK_HRM_APP_ID }}
           LARK_HRM_APP_SECRET: ${{ secrets.LARK_HRM_APP_SECRET }}
           LARK_BASE_ID: ${{ vars.LARK_BASE_ID }}
 
           TABLE_NAME_ATTENDANCE: ${{ inputs.TABLE_NAME_ATTENDANCE != '' && inputs.TABLE_NAME_ATTENDANCE || vars.TABLE_NAME_ATTENDANCE }}
-          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
-          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+          FROM: ${{ github.event_name == 'workflow_dispatch' && inputs.FROM || '' }}
+          TO: ${{ github.event_name == 'workflow_dispatch' && inputs.TO || '' }}
 
         run: node sync-attendance.js
 
@@ -70,8 +71,8 @@ jobs:
         env:
           CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
           TABLE_NAME_ATTENDANCE: ${{ inputs.TABLE_NAME_ATTENDANCE != '' && inputs.TABLE_NAME_ATTENDANCE || vars.TABLE_NAME_ATTENDANCE }}
-          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
-          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+          FROM: ${{ github.event_name == 'workflow_dispatch' && inputs.FROM || '' }}
+          TO: ${{ github.event_name == 'workflow_dispatch' && inputs.TO || '' }}
           CONCLUSION: ${{ needs.sync-attendance-job.result }}
         run: |
           jq -n \

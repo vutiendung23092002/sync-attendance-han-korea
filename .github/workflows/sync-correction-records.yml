@@ -41,6 +41,7 @@ jobs:
       - name: Run sync-correction-records.js
         env:
           DATABASE_SERVICE_KEY: ${{ secrets.DATABASE_SERVICE_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           AES_256_CBC_APP_SECRET_KEY: ${{ secrets.AES_256_CBC_APP_SECRET_KEY }}
           LARK_HRM_APP_ID: ${{ secrets.LARK_HRM_APP_ID }}
           LARK_HRM_APP_SECRET: ${{ secrets.LARK_HRM_APP_SECRET }}

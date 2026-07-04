@@ -13,6 +13,10 @@ export const env = {
 
   SUPABASE: {
     SERVICE_KEY: process.env.DATABASE_SERVICE_KEY,
+    DB_URL:
+      process.env.DATABASE_URL ||
+      process.env.SUPABASE_DB_URL ||
+      process.env.POSTGRES_URL,
   },
 
   AES_256_CBC: {
