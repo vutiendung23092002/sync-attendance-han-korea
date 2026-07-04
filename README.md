@@ -1,4 +1,4 @@
-# Sync attendance Hàn Korea
+# Sync attendance
 
 Repo này đồng bộ dữ liệu chấm công, đơn sửa giờ và đơn nghỉ phép từ Lark về LarkBase HRM.
 
