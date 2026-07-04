@@ -184,5 +184,6 @@ ORDER BY d.id
 - Attendance upsert theo `Id` và `hash`.
 - Một số field chấm công được khóa update nếu đã có giá trị để tránh đè lên dữ liệu sửa tay/correction.
 - Riêng `Check in result(TH)` và `Check out result(TH)` được phép đổi sang `Normal` nếu giá trị cũ không phải `NoNeedCheck`.
+- Các field phút đi muộn/về sớm được phép cập nhật từ rỗng hoặc `0` lên số dương nếu result cũ tương ứng không phải `Normal` hoặc `NoNeedCheck`.
 - Correction chỉ được apply vào attendance khi `Status = Approved`.
 - Correction match attendance bằng `id_lookup_correction`.

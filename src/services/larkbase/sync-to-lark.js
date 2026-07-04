@@ -6,6 +6,16 @@ const RESULT_FIELDS_ALLOW_NORMAL_UPDATE = new Set([
   "Check out result(TH)",
 ]);
 
+const CHECK_IN_MINUTE_FIELDS_ALLOW_POSITIVE_UPDATE = new Set([
+  "Số phút đi muộn",
+  "Sau 10p",
+  "Trước 10p",
+]);
+
+const CHECK_OUT_MINUTE_FIELDS_ALLOW_POSITIVE_UPDATE = new Set([
+  "Số phút về sớm",
+]);
+
 function normalizeLarkFieldText(value) {
   if (value === undefined || value === null) return "";
 
@@ -24,13 +34,68 @@ function normalizeLarkFieldText(value) {
   return String(value).trim();
 }
 
-function shouldAllowExcludedFieldUpdate(fieldLabel, oldValue, newValue) {
+function normalizeLarkFieldNumber(value) {
+  const text = normalizeLarkFieldText(value);
+  if (!text) return null;
+
+  const number = Number(text);
+  return Number.isFinite(number) ? number : null;
+}
+
+function isBlankOrZero(value) {
+  const text = normalizeLarkFieldText(value);
+  if (!text) return true;
+
+  const number = normalizeLarkFieldNumber(value);
+  return number === 0;
+}
+
+function canUpdateResultToNormal(fieldLabel, oldValue, newValue) {
   if (!RESULT_FIELDS_ALLOW_NORMAL_UPDATE.has(fieldLabel)) return false;
 
   const oldText = normalizeLarkFieldText(oldValue).toLowerCase();
   const newText = normalizeLarkFieldText(newValue).toLowerCase();
 
   return newText === "normal" && oldText !== "noneedcheck";
+}
+
+function canUpdateMinuteFieldFromTemporaryZero(fieldLabel, oldValue, newValue, oldRecord) {
+  const isCheckInMinuteField =
+    CHECK_IN_MINUTE_FIELDS_ALLOW_POSITIVE_UPDATE.has(fieldLabel);
+  const isCheckOutMinuteField =
+    CHECK_OUT_MINUTE_FIELDS_ALLOW_POSITIVE_UPDATE.has(fieldLabel);
+
+  if (!isCheckInMinuteField && !isCheckOutMinuteField) return false;
+  if (!isBlankOrZero(oldValue)) return false;
+
+  const newNumber = normalizeLarkFieldNumber(newValue);
+  if (newNumber === null || newNumber <= 0) return false;
+
+  const resultField = isCheckInMinuteField
+    ? "Check in result(TH)"
+    : "Check out result(TH)";
+  const oldResult = normalizeLarkFieldText(
+    oldRecord?.fields?.[resultField]
+  ).toLowerCase();
+
+  return oldResult !== "normal" && oldResult !== "noneedcheck";
+}
+
+function shouldAllowExcludedFieldUpdate(
+  fieldLabel,
+  oldValue,
+  newValue,
+  oldRecord
+) {
+  return (
+    canUpdateResultToNormal(fieldLabel, oldValue, newValue) ||
+    canUpdateMinuteFieldFromTemporaryZero(
+      fieldLabel,
+      oldValue,
+      newValue,
+      oldRecord
+    )
+  );
 }
 
 /**
@@ -129,6 +194,8 @@ export async function syncDataToLarkBaseFilterDate(
     tableName
   );
 
+  const toUpsertIdSet = new Set(toUpsert.map((u) => String(u.id)));
+
   const larkIdMap = Object.fromEntries(
     simplifiedRecords.map((r) => [String(r.id), r.record_id])
   );
@@ -137,8 +204,7 @@ export async function syncDataToLarkBaseFilterDate(
   const toCreate = data
     .filter(
       (r) =>
-        toUpsert.some((u) => String(u.id) === String(r.id)) &&
-        !larkIdMap[String(r.id)]
+        toUpsertIdSet.has(String(r.id)) && !larkIdMap[String(r.id)]
     )
     .map((r) => utils.mapFieldsToLark(r, fieldMap, typeMap));
 
@@ -146,13 +212,12 @@ export async function syncDataToLarkBaseFilterDate(
   // UPDATE — có exclude field
   // ===========================
   const toUpdate = data
-    .filter(
-      (r) =>
-        toUpsert.some((u) => String(u.id) === String(r.id)) &&
-        larkIdMap[String(r.id)]
-    )
+    .filter((r) => larkIdMap[String(r.id)])
     .map((r) => {
+      const id = String(r.id);
       const mapped = utils.mapFieldsToLark(r, fieldMap, typeMap).fields;
+      const shouldUpdateByHash = toUpsertIdSet.has(id);
+      let hasAllowedExcludedFieldUpdate = false;
 
       const excludeList = Array.isArray(excludeUpdateField)
         ? excludeUpdateField
@@ -178,8 +243,13 @@ export async function syncDataToLarkBaseFilterDate(
           const canUpdateExcludedField = shouldAllowExcludedFieldUpdate(
             fldLabel,
             oldVal,
-            mapped[fldLabel]
+            mapped[fldLabel],
+            oldRecordFull
           );
+
+          if (canUpdateExcludedField && mapped[fldLabel] !== undefined) {
+            hasAllowedExcludedFieldUpdate = true;
+          }
 
           if (
             hasOldValue &&
@@ -191,11 +261,16 @@ export async function syncDataToLarkBaseFilterDate(
         });
       }
 
+      if (!shouldUpdateByHash && !hasAllowedExcludedFieldUpdate) {
+        return null;
+      }
+
       return {
-        record_id: larkIdMap[String(r.id)],
+        record_id: larkIdMap[id],
         fields: mapped,
       };
-    });
+    })
+    .filter(Boolean);
 
   console.log(
     `[LARK] Tạo mới: ${toCreate.length} | Cập nhật: ${toUpdate.length}`
