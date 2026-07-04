@@ -154,7 +154,7 @@ async function checkCorrectionStatus(
         const replMout = toMinutes(repl);
         let shiftMout = toMinutes(shiftOut);
 
-        if (shiftMout >= 10 * 60 + 30 && replMout < 5 * 60 + 30) {
+        if (shiftMout >= 10 * 60 + 30 && replMout <= 6 * 60 + 30) {
           shiftMout = 5 * 60;
         }
 
