@@ -30,6 +30,53 @@ function classifyLate(late) {
   return "SeriousLate";
 }
 
+function normalizeLarkFieldText(value) {
+  if (value === undefined || value === null) return "";
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => normalizeLarkFieldText(item))
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+  }
+
+  if (typeof value === "object") {
+    return String(value.text ?? value.value ?? "").trim();
+  }
+
+  return String(value).trim();
+}
+
+function normalizeLarkFieldNumber(value) {
+  const text = normalizeLarkFieldText(value);
+  if (!text) return 0;
+
+  const number = Number(text);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function isProtectedResult(value) {
+  const result = normalizeLarkFieldText(value).toLowerCase();
+  return result === "normal" || result === "noneedcheck";
+}
+
+function isManuallyResolvedCheckIn(fields) {
+  return (
+    isProtectedResult(fields["Check in result(TH)"]) &&
+    normalizeLarkFieldNumber(fields["Số phút đi muộn"]) === 0 &&
+    normalizeLarkFieldNumber(fields["Trước 10p"]) === 0 &&
+    normalizeLarkFieldNumber(fields["Sau 10p"]) === 0
+  );
+}
+
+function isManuallyResolvedCheckOut(fields) {
+  return (
+    isProtectedResult(fields["Check out result(TH)"]) &&
+    normalizeLarkFieldNumber(fields["Số phút về sớm"]) === 0
+  );
+}
+
 async function checkCorrectionStatus(
   hrmAppId,
   hrmAppSecret,
@@ -120,6 +167,13 @@ async function checkCorrectionStatus(
       const originalText = m.originalText || "";
       // console.log("Original correction text:", originalText);
       if (originalText.toLowerCase().includes("start time")) {
+        if (isManuallyResolvedCheckIn(f)) {
+          console.log(
+            `--> Skip ${lookup} vì check-in đã được sửa tay về Normal/NoNeedCheck`
+          );
+          continue;
+        }
+
         // const isSame = sameTime(f["Check in time(TH)"], repl);
         // if (isSame) {
         //   console.log(`--> Skip ${lookup} vì check-in đã đúng giờ`);
@@ -144,6 +198,13 @@ async function checkCorrectionStatus(
         updateField["Trước 10p"] = Math.min(late, 10);
         updateField["Sau 10p"] = late > 10 ? late - 10 : 0;
       } else if (originalText.toLowerCase().includes("end time")) {
+        if (isManuallyResolvedCheckOut(f)) {
+          console.log(
+            `--> Skip ${lookup} vì check-out đã được sửa tay về Normal/NoNeedCheck`
+          );
+          continue;
+        }
+
         // const isSame = sameTime(f["Check out time(TH)"], repl);
         // if (isSame) {
         //   console.log(`--> Skip ${lookup} vì check-out đã đúng giờ`);
