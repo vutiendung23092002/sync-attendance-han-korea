@@ -72,8 +72,8 @@ node sync-leave-instances.js
 
 ## Khoảng ngày mặc định
 
-- `sync-attendance.js`: mặc định sync từ 30 ngày trước đến hôm qua.
-- `sync-correction-records.js`: mặc định sync từ 29 ngày trước đến hôm nay.
+- `sync-attendance.js`: mặc định sync từ ngày đầu tháng đến hôm nay.
+- `sync-correction-records.js`: mặc định sync từ ngày đầu tháng đến hôm nay.
 - `sync-leave-instances.js`: mặc định sync từ 29 ngày trước đến hôm nay.
 - `check-correction-status.js`: nếu trước mùng 8 thì check 30 ngày trước, nếu từ mùng 8 trở đi thì check từ đầu tháng.
 
@@ -110,7 +110,7 @@ Workflow chính:
 - `.github/workflows/check-correction.yml`: chạy riêng bước apply đơn sửa giờ.
 - `.github/workflows/sync-leave-instance.yml`: sync đơn nghỉ phép.
 
-Với scheduled attendance run, workflow không truyền `FROM` / `TO` để script tự dùng range 30 ngày trước đến hôm qua. Manual run vẫn có thể truyền `FROM` / `TO`.
+Với scheduled attendance run, workflow không truyền `FROM` / `TO` để script tự dùng range từ ngày đầu tháng đến hôm nay. Manual run vẫn có thể truyền `FROM` / `TO`.
 
 ## Schema `han_hrm`
 

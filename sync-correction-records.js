@@ -15,6 +15,7 @@ import {
   CORECTION_RECORD_UI_TYPE_MAP,
   vnTimeToUTCTimestampMiliseconds,
   writeJsonFile,
+  getStartOfMonthYmd,
   getTodayYmd,
 } from "./src/utils/index.js";
 import { env } from "./src/config/env.js";
@@ -155,11 +156,11 @@ const tableName = process.env.TABLE_CORECTION_NAME;
 
 const from = process.env.FROM
   ? `${process.env.FROM} 00:00:00`
-  : `${getTodayYmd(29)} 00:00:00`;
+  : `${getStartOfMonthYmd()} 00:00:00`;
 
 const to = process.env.TO
   ? `${process.env.TO} 23:59:59`
-  : `${getTodayYmd(0)} 23:59:59`;
+  : `${getTodayYmd()} 23:59:59`;
 
 listCorrectionInstances(
   hrmAppId,
