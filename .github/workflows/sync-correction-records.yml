@@ -48,8 +48,8 @@ jobs:
           LARK_BASE_ID: ${{ vars.LARK_BASE_ID }}
 
           TABLE_CORECTION_NAME: ${{ inputs.TABLE_CORECTION_NAME != '' && inputs.TABLE_CORECTION_NAME || vars.TABLE_CORECTION_NAME }}
-          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
-          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+          FROM: ${{ github.event_name == 'workflow_dispatch' && inputs.FROM || '' }}
+          TO: ${{ github.event_name == 'workflow_dispatch' && inputs.TO || '' }}
 
         run: node sync-correction-records.js
 
@@ -71,8 +71,8 @@ jobs:
         env:
           CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
           TABLE_CORECTION_NAME: ${{ inputs.TABLE_CORECTION_NAME != '' && inputs.TABLE_CORECTION_NAME || vars.TABLE_CORECTION_NAME }}
-          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
-          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+          FROM: ${{ github.event_name == 'workflow_dispatch' && inputs.FROM || '' }}
+          TO: ${{ github.event_name == 'workflow_dispatch' && inputs.TO || '' }}
           CONCLUSION: ${{ needs.sync-correction-job.result }}
         run: |
           jq -n \
@@ -121,8 +121,8 @@ jobs:
           TABLE_ATTENDANCE_ID: ${{ vars.TABLE_ATTENDANCE_ID }}
           TABLE_CORECTION_ID: ${{ vars.TABLE_CORECTION_ID }}
 
-          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
-          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+          FROM: ${{ github.event_name == 'workflow_dispatch' && inputs.FROM || '' }}
+          TO: ${{ github.event_name == 'workflow_dispatch' && inputs.TO || '' }}
 
         run: node check-correction-status.js
 
@@ -141,8 +141,8 @@ jobs:
         env:
           CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
 
-          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
-          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+          FROM: ${{ github.event_name == 'workflow_dispatch' && inputs.FROM || '' }}
+          TO: ${{ github.event_name == 'workflow_dispatch' && inputs.TO || '' }}
 
           CONCLUSION: ${{ needs.check-correction-status-job.result }}
         run: |

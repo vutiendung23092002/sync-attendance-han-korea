@@ -1,7 +1,7 @@
 import { fetchAttendanceForDepartment } from "./src/services/larkbase/attendance.js";
 import { createLarkClient } from "./src/core/larkbase-client.js";
 import {
-  getStartOfMonthYmd,
+  getLarkSyncStartOfMonthYmd,
   getTodayYmd,
 } from "./src/utils/common/time-helper.js";
 import { env } from "./src/config/env.js";
@@ -121,7 +121,7 @@ const hrmAppSecret = env.LARK.hrm_app.app_secret;
 const baseID = env.LARK.BASE_ID;
 const tableName = process.env.TABLE_NAME_ATTENDANCE;
 
-const from = process.env.FROM || getStartOfMonthYmd();
+const from = process.env.FROM || getLarkSyncStartOfMonthYmd();
 const to = process.env.TO || getTodayYmd();
 
 syncAttendance(hrmAppId, hrmAppSecret, baseID, tableName, from, to)

@@ -133,6 +133,16 @@ export function getStartOfMonthYmd() {
   return dayjs().tz("Asia/Ho_Chi_Minh").startOf("month").format("YYYY/MM/DD");
 }
 
+export function getLarkSyncStartOfMonthYmd() {
+  const now = dayjs().tz("Asia/Ho_Chi_Minh");
+  const daysToSkip = now.daysInMonth() === 31 && now.date() > 1 ? 1 : 0;
+
+  return now
+    .startOf("month")
+    .add(daysToSkip, "day")
+    .format("YYYY/MM/DD");
+}
+
 export function getFromDateSmart() {
   const now = dayjs().tz("Asia/Ho_Chi_Minh");
   const dayOfMonth = now.date(); // ngày trong tháng (1–31)
