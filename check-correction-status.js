@@ -14,9 +14,10 @@ import { env } from "./src/config/env.js";
 function toMinutes(timeVal) {
   if (!timeVal) return null;
 
-  // Lark trả về ms timestamp
+  // Luôn dùng UTC component để giữ đúng timeline đang lưu trên Lark và
+  // không phụ thuộc timezone của máy chạy (local UTC+7 hay GitHub UTC).
   const d = new Date(timeVal);
-  return d.getHours() * 60 + d.getMinutes();
+  return d.getUTCHours() * 60 + d.getUTCMinutes();
 }
 
 function sameTime(a, b) {

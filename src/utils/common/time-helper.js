@@ -176,7 +176,8 @@ export function numberYmdToFullDate(num) {
 
 export function vnLocalToUtcISOString(datetimeStr) {
   // datetimeStr: "2025-12-04 17:30"
-  return new Date(datetimeStr.replace(" ", "T") + "+07:00").toISOString();
+  const normalized = datetimeStr.replace(/\//g, "-").replace(" ", "T");
+  return new Date(normalized + "+07:00").toISOString();
 }
 
 export function utcISOStringToYmd(isoString) {
@@ -187,9 +188,9 @@ export function utcISOStringToYmd(isoString) {
   // chuyển sang giờ VN (+7)
   const vnTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
 
-  const yyyy = vnTime.getFullYear();
-  const mm = String(vnTime.getMonth() + 1).padStart(2, "0");
-  const dd = String(vnTime.getDate()).padStart(2, "0");
+  const yyyy = vnTime.getUTCFullYear();
+  const mm = String(vnTime.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(vnTime.getUTCDate()).padStart(2, "0");
 
   return `${yyyy}/${mm}/${dd}`;
 }

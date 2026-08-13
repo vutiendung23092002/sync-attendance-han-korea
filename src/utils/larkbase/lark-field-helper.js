@@ -23,6 +23,32 @@
  * normalizeFieldValue(2, "123");  // → 123
  * normalizeFieldValue(5, "2025-01-20T10:00:00Z"); // → 1737367200000
  */
+function dateTimeToEpochMilliseconds(value) {
+  if (value instanceof Date) {
+    return isNaN(value.getTime()) ? null : value.getTime();
+  }
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  const normalized = String(value)
+    .trim()
+    .replace(/\//g, "-")
+    .replace(/^(\d{4}-\d{2}-\d{2})\s/, "$1T");
+
+  let dateTime = normalized;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    dateTime = `${normalized}T00:00:00Z`;
+  } else if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized)) {
+    dateTime = `${normalized}Z`;
+  }
+
+  const timestamp = new Date(dateTime).getTime();
+  return isNaN(timestamp) ? null : timestamp;
+}
+
 function normalizeFieldValue(type, value) {
   if (value === null || value === undefined || value === "") return null;
 
@@ -31,8 +57,9 @@ function normalizeFieldValue(type, value) {
       return isNaN(value) ? null : Number(value);
 
     case 5: // datetime
-      const d = new Date(value);
-      return isNaN(d.getTime()) ? null : d.getTime();
+      // Chuỗi không có timezone được coi là UTC để kết quả không phụ thuộc
+      // timezone của máy chạy (local UTC+7 hay GitHub Actions UTC).
+      return dateTimeToEpochMilliseconds(value);
 
     case 3: // boolean
       return Boolean(value);
