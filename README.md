@@ -2,6 +2,8 @@
 
 Repo này đồng bộ dữ liệu chấm công, đơn sửa giờ và đơn nghỉ phép từ Lark về LarkBase HRM.
 
+Tài liệu chi tiết về kiến trúc, từng luồng chạy và quy tắc thêm/cập nhật record nằm tại [docs/README.md](./docs/README.md).
+
 ## Luồng chính
 
 - `sync-attendance.js`: lấy kết quả chấm công theo phòng ban, format và upsert vào bảng chấm công.
@@ -197,8 +199,7 @@ ORDER BY d.id
 ## Logic cần lưu ý
 
 - Attendance upsert theo `Id` và `hash`.
-- Một số field chấm công được khóa update nếu đã có giá trị để tránh đè lên dữ liệu sửa tay/correction.
-- Riêng `Check in result(TH)` và `Check out result(TH)` được phép đổi sang `Normal` nếu giá trị cũ không phải `NoNeedCheck`.
-- Các field phút đi muộn/về sớm được phép cập nhật từ rỗng hoặc `0` lên số dương nếu result cũ tương ứng không phải `Normal` hoặc `NoNeedCheck`.
+- Một số field chấm công được bảo vệ để tránh đè lên dữ liệu sửa tay/correction, nhưng có ngoại lệ cho `Normal`, `NoNeedCheck` và placeholder chưa chấm công.
 - Correction chỉ được apply vào attendance khi `Status = Approved`.
 - Correction match attendance bằng `id_lookup_correction`.
+- Chi tiết đầy đủ nằm trong [tài liệu đồng bộ attendance](./docs/02-attendance-sync.md) và [cơ chế upsert LarkBase](./docs/06-lark-upsert.md).
