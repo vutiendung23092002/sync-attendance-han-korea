@@ -21,6 +21,10 @@ import {
 import { env } from "./src/config/env.js";
 import { formatCorrectionRecordsV2 } from "./src/utils/larkbase/corection-records-formated.js";
 import { syncDataToLarkBaseFilterDate } from "./src/services/larkbase/sync-to-lark.js";
+import {
+  ensureLarkBaseField,
+  getListTable,
+} from "./src/services/larkbase/table.js";
 
 const DEPARTMENT_CONCURRENCY = 5;
 const DETAIL_CONCURRENCY = 5;
@@ -37,6 +41,7 @@ async function listCorrectionInstances(
   to
 ) {
   console.log("=== START SYNC CORRECTION (SAFE MODE) ===");
+  console.log(`>>> DATE RANGE: ${from} - ${to}`);
 
   const departmentConfigs = await getAttendanceDepartmentConfigs();
 
@@ -127,6 +132,24 @@ async function listCorrectionInstances(
 
   console.log(">>> SYNC LARKBASE...");
 
+  console.log(">>> FETCH LARKBASE TABLES...");
+  const tableList = await getListTable(clientHrm, baseID);
+  const correctionTable = tableList?.data?.items?.find(
+    (table) => table.name === tableName,
+  );
+
+  if (correctionTable) {
+    console.log(">>> ENSURE CORRECTION NOTE FIELD...");
+    await ensureLarkBaseField(clientHrm, baseID, correctionTable.table_id, {
+      fieldName: "Ghi chú",
+      type: 1,
+      uiType: "Text",
+    });
+  } else {
+    console.log(">>> CORRECTION TABLE DOES NOT EXIST YET; SKIP FIELD CHECK");
+  }
+
+  console.log(">>> UPSERT CORRECTION RECORDS...");
   await syncDataToLarkBaseFilterDate(
     clientHrm,
     baseID,

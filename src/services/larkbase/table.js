@@ -30,6 +30,76 @@ export async function getListTable(client, baseId) {
   }
 }
 
+export async function ensureLarkBaseField(
+  client,
+  baseId,
+  tableId,
+  { fieldName, type, uiType },
+) {
+  let pageToken;
+  const seenPageTokens = new Set();
+
+  while (true) {
+    console.log(
+      `>>> CHECK FIELD '${fieldName}'${pageToken ? " (next page)" : ""}`,
+    );
+
+    const listResponse = await client.bitable.appTableField.list({
+      path: { app_token: baseId, table_id: tableId },
+      params: {
+        page_size: 100,
+        page_token: pageToken,
+      },
+    });
+
+    if (listResponse?.code && listResponse.code !== 0) {
+      throw new Error(
+        `Không thể lấy danh sách field Lark: ${listResponse.msg || "unknown error"}`,
+      );
+    }
+
+    const fields = listResponse?.data?.items || [];
+    if (fields.some((field) => field.field_name === fieldName)) {
+      console.log(`>>> FIELD '${fieldName}' ALREADY EXISTS`);
+      return;
+    }
+
+    if (listResponse?.data?.has_more !== true) break;
+
+    const nextPageToken = listResponse?.data?.page_token;
+    if (!nextPageToken || seenPageTokens.has(nextPageToken)) {
+      throw new Error(
+        `Lark trả về page token không hợp lệ khi kiểm tra field '${fieldName}'.`,
+      );
+    }
+
+    seenPageTokens.add(nextPageToken);
+    pageToken = nextPageToken;
+  }
+
+  console.log(`>>> CREATE FIELD '${fieldName}'`);
+
+  const createResponse = await client.bitable.appTableField.create({
+    path: { app_token: baseId, table_id: tableId },
+    data: {
+      field_name: fieldName,
+      type,
+      ui_type: uiType,
+    },
+  });
+
+  if (
+    (createResponse?.code && createResponse.code !== 0) ||
+    !createResponse?.data?.field
+  ) {
+    throw new Error(
+      `Không thể tạo field '${fieldName}': ${createResponse?.msg || "unknown error"}`,
+    );
+  }
+
+  console.log(`SUCCESS: Đã tạo field '${fieldName}' trong bảng correction.`);
+}
+
 /**
  * Tạo bảng mới trong Lark Base nếu bảng chưa tồn tại.
  *
