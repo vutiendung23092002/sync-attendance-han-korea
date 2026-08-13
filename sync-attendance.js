@@ -24,6 +24,7 @@ async function syncAttendance(
   to
 ) {
   console.log("=== START SYNC ATTENDANCE ===");
+  console.log(`>>> DATE RANGE: ${from} - ${to}`);
 
   const departmentConfigs = await getAttendanceDepartmentConfigs();
 
