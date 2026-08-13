@@ -110,7 +110,22 @@ Workflow chính:
 - `.github/workflows/check-correction.yml`: chạy riêng bước apply đơn sửa giờ.
 - `.github/workflows/sync-leave-instance.yml`: sync đơn nghỉ phép.
 
-Với scheduled attendance/correction run, workflow không truyền `FROM` / `TO` để script tự dùng range từ đầu tháng đến hôm nay. Với tháng có 31 ngày, range bắt đầu từ ngày 02 (riêng ngày mùng 1 vẫn bắt đầu từ ngày 01). Manual run vẫn có thể truyền `FROM` / `TO`.
+Các workflow đặt `TZ=Asia/Ho_Chi_Minh` để cách parse/format ngày giờ của Node giống nhau giữa local và GitHub Actions. Cron của GitHub vẫn luôn tính theo UTC.
+
+Khi chạy tự động (`schedule`), workflow không truyền `FROM` / `TO`; từng script tự tính range theo ngày Việt Nam:
+
+- Attendance và correction: từ đầu tháng đến hôm nay. Tháng có 31 ngày bắt đầu từ ngày 02 để không vượt giới hạn 30 ngày của Lark (riêng ngày mùng 1 vẫn bắt đầu từ ngày 01).
+- Check correction: trước ngày 08 lấy 30 ngày trước đến hôm nay; từ ngày 08 lấy ngày đầu tháng đến hôm nay.
+- Leave: từ 29 ngày trước đến hôm nay.
+
+Khi chạy thủ công (`workflow_dispatch`), range lấy từ input `FROM` / `TO`. Khi chạy local, `FROM` / `TO` trong `.env` vẫn được ưu tiên; muốn dùng range tự động thì để trống hoặc bỏ hai biến này.
+
+Khi sync phiếu sửa giờ, hệ thống tự nhận diện một số trường hợp nghi ngờ chọn nhầm giờ:
+
+- Phiếu `Start time` có `Replenishment time` sau 17:00 được đưa về giờ Start trong `Original record`.
+- Phiếu `End time` có `Replenishment time` trước 09:00 được đưa về giờ End trong `Original record`.
+- Chỉ tự sửa ca ngày có Start gốc trước 09:00 hoặc End gốc sau 17:00; nếu không đủ dữ liệu hoặc là ca đặc biệt thì giữ nguyên.
+- Giá trị trước khi sửa được lưu trong cột `Ghi chú`, cột này được tự tạo nếu chưa tồn tại.
 
 ## Schema `han_hrm`
 
