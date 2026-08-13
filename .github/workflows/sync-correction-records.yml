@@ -1,5 +1,8 @@
 name: Nodejs sync & check correction records
 
+env:
+  TZ: Asia/Ho_Chi_Minh
+
 on:
   schedule:
     - cron: "30 14 */1 * *"

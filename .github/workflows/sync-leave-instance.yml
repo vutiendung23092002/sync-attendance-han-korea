@@ -1,5 +1,8 @@
 name: Nodejs sync-leave-instances
 
+env:
+  TZ: Asia/Ho_Chi_Minh
+
 on:
   schedule:
     - cron: "30 14 */1 * *"
@@ -51,8 +54,8 @@ jobs:
           LARK_BASE_ID: ${{ vars.LARK_BASE_ID }}
 
           TABLE_INSTANCES_NAME: ${{ inputs.TABLE_INSTANCES_NAME != '' && inputs.TABLE_INSTANCES_NAME || vars.TABLE_INSTANCES_NAME }}
-          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
-          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+          FROM: ${{ github.event_name == 'workflow_dispatch' && inputs.FROM || '' }}
+          TO: ${{ github.event_name == 'workflow_dispatch' && inputs.TO || '' }}
 
         run: node sync-leave-instances.js
 
@@ -72,8 +75,8 @@ jobs:
           CALLBACK_URL: ${{ secrets.CALLBACK_URL }}
 
           TABLE_INSTANCES_NAME: ${{ inputs.TABLE_INSTANCES_NAME != '' && inputs.TABLE_INSTANCES_NAME || vars.TABLE_INSTANCES_NAME }}
-          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
-          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+          FROM: ${{ github.event_name == 'workflow_dispatch' && inputs.FROM || '' }}
+          TO: ${{ github.event_name == 'workflow_dispatch' && inputs.TO || '' }}
 
           CONCLUSION: ${{ needs.sync-leave-job.result }}
         run: |

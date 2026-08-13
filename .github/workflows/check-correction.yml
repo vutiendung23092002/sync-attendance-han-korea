@@ -3,6 +3,9 @@
 
 name: Nodejs check-corection-status
 
+env:
+  TZ: Asia/Ho_Chi_Minh
+
 on:
   schedule:
    - cron: "*/40 * * * *"
@@ -42,7 +45,7 @@ jobs:
           LARK_BASE_ID: ${{ vars.LARK_BASE_ID }}
           TABLE_ATTENDANCE_ID: ${{ vars.TABLE_ATTENDANCE_ID }}
           TABLE_CORECTION_ID: ${{ vars.TABLE_CORECTION_ID }}
-          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
-          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+          FROM: ${{ github.event_name == 'workflow_dispatch' && inputs.FROM || '' }}
+          TO: ${{ github.event_name == 'workflow_dispatch' && inputs.TO || '' }}
 
         run: node check-correction-status.js

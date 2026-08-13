@@ -1,5 +1,8 @@
 name: Nodejs sync attendance
 
+env:
+  TZ: Asia/Ho_Chi_Minh
+
 on:
   schedule:
     - cron: "30 20 * * *"
