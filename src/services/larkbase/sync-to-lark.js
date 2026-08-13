@@ -1,20 +1,31 @@
 import * as larkbaseService from "./index.js";
 import * as utils from "../../utils/index.js";
 
-const RESULT_FIELDS_ALLOW_NORMAL_UPDATE = new Set([
+const RESULT_FIELDS_ALLOW_RESOLVED_UPDATE = new Set([
   "Check in result(TH)",
   "Check out result(TH)",
 ]);
 
-const CHECK_IN_MINUTE_FIELDS_ALLOW_POSITIVE_UPDATE = new Set([
+const RESOLVED_ATTENDANCE_RESULTS = new Set(["normal", "noneedcheck"]);
+
+const CHECK_IN_TIME_FIELD = "Check in time(TH)";
+const CHECK_IN_SHIFT_TIME_FIELD = "Check in shift time(TH)";
+const CHECK_IN_RESULT_FIELD = "Check in result(TH)";
+
+const CHECK_IN_MINUTE_FIELDS = new Set([
   "Số phút đi muộn",
   "Sau 10p",
   "Trước 10p",
 ]);
 
-const CHECK_OUT_MINUTE_FIELDS_ALLOW_POSITIVE_UPDATE = new Set([
+const CHECK_OUT_MINUTE_FIELDS = new Set([
   "Số phút về sớm",
 ]);
+
+const RESULT_MINUTE_FIELDS = {
+  "Check in result(TH)": [...CHECK_IN_MINUTE_FIELDS],
+  "Check out result(TH)": [...CHECK_OUT_MINUTE_FIELDS],
+};
 
 function normalizeLarkFieldText(value) {
   if (value === undefined || value === null) return "";
@@ -46,54 +57,125 @@ function isBlankOrZero(value) {
   const text = normalizeLarkFieldText(value);
   if (!text) return true;
 
-  const number = normalizeLarkFieldNumber(value);
-  return number === 0;
+  return normalizeLarkFieldNumber(value) === 0;
 }
 
-function canUpdateResultToNormal(fieldLabel, oldValue, newValue) {
-  if (!RESULT_FIELDS_ALLOW_NORMAL_UPDATE.has(fieldLabel)) return false;
-
-  const oldText = normalizeLarkFieldText(oldValue).toLowerCase();
-  const newText = normalizeLarkFieldText(newValue).toLowerCase();
-
-  return newText === "normal" && oldText !== "noneedcheck";
+function isResolvedAttendanceResult(value) {
+  const normalized = normalizeLarkFieldText(value).toLowerCase();
+  return RESOLVED_ATTENDANCE_RESULTS.has(normalized);
 }
 
-function canUpdateMinuteFieldFromTemporaryZero(fieldLabel, oldValue, newValue, oldRecord) {
+function canUpdateResultToResolved(fieldLabel, newValue, mappedFields) {
+  if (!RESULT_FIELDS_ALLOW_RESOLVED_UPDATE.has(fieldLabel)) return false;
+  if (!isResolvedAttendanceResult(newValue)) return false;
+
+  return RESULT_MINUTE_FIELDS[fieldLabel].every(
+    (minuteField) => normalizeLarkFieldNumber(mappedFields?.[minuteField]) === 0
+  );
+}
+
+function canResetMinuteFieldForResolvedResult(
+  fieldLabel,
+  newValue,
+  mappedFields
+) {
   const isCheckInMinuteField =
-    CHECK_IN_MINUTE_FIELDS_ALLOW_POSITIVE_UPDATE.has(fieldLabel);
+    CHECK_IN_MINUTE_FIELDS.has(fieldLabel);
   const isCheckOutMinuteField =
-    CHECK_OUT_MINUTE_FIELDS_ALLOW_POSITIVE_UPDATE.has(fieldLabel);
+    CHECK_OUT_MINUTE_FIELDS.has(fieldLabel);
+
+  if (!isCheckInMinuteField && !isCheckOutMinuteField) return false;
+
+  const newNumber = normalizeLarkFieldNumber(newValue);
+  if (newNumber !== 0) return false;
+
+  const resultField = isCheckInMinuteField
+    ? "Check in result(TH)"
+    : "Check out result(TH)";
+
+  return isResolvedAttendanceResult(mappedFields?.[resultField]);
+}
+
+function canFillMinuteFieldForPendingResult(
+  fieldLabel,
+  oldValue,
+  newValue,
+  oldRecord,
+  mappedFields
+) {
+  const isCheckInMinuteField = CHECK_IN_MINUTE_FIELDS.has(fieldLabel);
+  const isCheckOutMinuteField = CHECK_OUT_MINUTE_FIELDS.has(fieldLabel);
 
   if (!isCheckInMinuteField && !isCheckOutMinuteField) return false;
   if (!isBlankOrZero(oldValue)) return false;
-
-  const newNumber = normalizeLarkFieldNumber(newValue);
-  if (newNumber === null || newNumber <= 0) return false;
 
   const resultField = isCheckInMinuteField
     ? "Check in result(TH)"
     : "Check out result(TH)";
   const oldResult = normalizeLarkFieldText(
     oldRecord?.fields?.[resultField]
-  ).toLowerCase();
+  );
+  const newResult = normalizeLarkFieldText(mappedFields?.[resultField]);
+  const newNumber = normalizeLarkFieldNumber(newValue);
 
-  return oldResult !== "normal" && oldResult !== "noneedcheck";
+  return (
+    !oldResult &&
+    Boolean(newResult) &&
+    !isResolvedAttendanceResult(newResult) &&
+    newNumber !== null &&
+    newNumber > 0
+  );
+}
+
+function canAlignCheckInTimeWithShift(
+  fieldLabel,
+  oldValue,
+  oldRecord,
+  mappedFields
+) {
+  if (fieldLabel !== CHECK_IN_TIME_FIELD) return false;
+
+  const canResolveCheckIn = canUpdateResultToResolved(
+    CHECK_IN_RESULT_FIELD,
+    mappedFields?.[CHECK_IN_RESULT_FIELD],
+    mappedFields
+  );
+  if (!canResolveCheckIn) return false;
+
+  const oldCheckIn = normalizeLarkFieldNumber(oldValue);
+  const oldShift = normalizeLarkFieldNumber(
+    oldRecord?.fields?.[CHECK_IN_SHIFT_TIME_FIELD]
+  );
+  const newShift = normalizeLarkFieldNumber(
+    mappedFields?.[CHECK_IN_SHIFT_TIME_FIELD]
+  );
+
+  if (oldCheckIn === null || newShift === null) return false;
+
+  const shiftToCompare = oldShift ?? newShift;
+  return oldCheckIn !== shiftToCompare;
 }
 
 function shouldAllowExcludedFieldUpdate(
   fieldLabel,
   oldValue,
   newValue,
-  oldRecord
+  oldRecord,
+  mappedFields
 ) {
   return (
-    canUpdateResultToNormal(fieldLabel, oldValue, newValue) ||
-    canUpdateMinuteFieldFromTemporaryZero(
+    canUpdateResultToResolved(fieldLabel, newValue, mappedFields) ||
+    canResetMinuteFieldForResolvedResult(
+      fieldLabel,
+      newValue,
+      mappedFields
+    ) ||
+    canFillMinuteFieldForPendingResult(
       fieldLabel,
       oldValue,
       newValue,
-      oldRecord
+      oldRecord,
+      mappedFields
     )
   );
 }
@@ -239,13 +321,27 @@ export async function syncDataToLarkBaseFilterDate(
             oldVal !== "" &&
             !(Array.isArray(oldVal) && oldVal.length === 0);
 
-          // Nếu có dữ liệu cũ → không update field này
-          const canUpdateExcludedField = shouldAllowExcludedFieldUpdate(
+          const canAlignCheckIn = canAlignCheckInTimeWithShift(
             fldLabel,
             oldVal,
-            mapped[fldLabel],
-            oldRecordFull
+            oldRecordFull,
+            mapped
           );
+
+          if (canAlignCheckIn) {
+            mapped[fldLabel] = mapped[CHECK_IN_SHIFT_TIME_FIELD];
+          }
+
+          // Nếu có dữ liệu cũ → chỉ update field này khi thỏa ngoại lệ.
+          const canUpdateExcludedField =
+            canAlignCheckIn ||
+            shouldAllowExcludedFieldUpdate(
+              fldLabel,
+              oldVal,
+              mapped[fldLabel],
+              oldRecordFull,
+              mapped
+            );
 
           if (canUpdateExcludedField && mapped[fldLabel] !== undefined) {
             hasAllowedExcludedFieldUpdate = true;

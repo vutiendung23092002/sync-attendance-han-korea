@@ -17,6 +17,11 @@ function normalizeResult(val) {
   return String(val).toLowerCase() === "todo" ? "" : val;
 }
 
+function isResolvedResult(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return normalized === "normal" || normalized === "noneedcheck";
+}
+
 export function formatAttendanceResults(results) {
   // Hạ mốc 12:30 thật xuống 5:30 vì helper của bạn trừ 7 tiếng
   const CUTOFF = 5 * 60 + 30; // 05:30
@@ -65,6 +70,10 @@ export function formatAttendanceResults(results) {
     }
     late = late > 0 ? late : 0;
 
+    if (isResolvedResult(resIn)) {
+      late = 0;
+    }
+
     const lateAfter10 = Math.max(0, late - 10);
     const lateBefore10 = Math.min(late, 10);
 
@@ -82,6 +91,10 @@ export function formatAttendanceResults(results) {
       }
     }
     early = early > 0 ? early : 0;
+
+    if (isResolvedResult(resOut)) {
+      early = 0;
+    }
 
     const formatted = {
       day: numberYmdToFullDate(item.day),
