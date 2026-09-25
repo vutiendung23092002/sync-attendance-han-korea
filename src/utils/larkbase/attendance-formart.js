@@ -23,8 +23,8 @@ function isResolvedResult(value) {
 }
 
 export function formatAttendanceResults(results) {
-  // Hạ mốc 12:30 thật xuống 5:30 vì helper của bạn trừ 7 tiếng
-  const CUTOFF = 5 * 60 + 30; // 05:30
+  // Hạ mốc 12:00 thật xuống 5:00 vì helper của bạn trừ 7 tiếng
+  const CUTOFF = 5 * 60; // 05:00
   const SHIFT_PM_BASE = 6 * 60 + 30; // 06:30 (tương đương 13:30 thật)
   const AM_END_BASE = 5 * 60; // 05:00 (tương đương 12:00 thật)
   const PM_END_BASE = 10 * 60 + 30; // 10:30 (tương đương 17:30 thật)
@@ -58,7 +58,7 @@ export function formatAttendanceResults(results) {
     // ---- TÍNH MUỘN CHECK IN ----
     let late = 0;
     if (inM != null) {
-      if (inM > CUTOFF) {
+      if (inM >= CUTOFF) {
         // ca chiều → late = giờ vào - 13:30 thật (timeline 06:30)
         const diff = inM - SHIFT_PM_BASE;
         late = diff > 0 ? diff : 0;
