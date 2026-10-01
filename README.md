@@ -193,6 +193,7 @@ FROM han_hrm.users u
 JOIN han_hrm.departments d ON d.id = u.department_id
 JOIN han_hrm.apps a ON a.org_id = d.org_id AND a.type = 'attendance'
 WHERE u.department_id IS NOT NULL
+  AND d.lark_department_id IS NOT NULL
 ORDER BY d.id
 ```
 

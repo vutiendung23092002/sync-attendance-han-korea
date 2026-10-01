@@ -28,6 +28,7 @@ export async function getAttendanceDepartmentConfigs(
       JOIN ${schema}.departments d ON d.id = u.department_id
       JOIN ${schema}.apps a ON a.org_id = d.org_id AND a.type = $1
       WHERE u.department_id IS NOT NULL
+        AND d.lark_department_id IS NOT NULL
       ORDER BY d.id
     `,
     ["attendance"]

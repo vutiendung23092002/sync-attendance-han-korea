@@ -63,12 +63,14 @@ JOIN han_hrm.apps a
   ON a.org_id = d.org_id
  AND a.type = 'attendance'
 WHERE u.department_id IS NOT NULL
+  AND d.lark_department_id IS NOT NULL
 ORDER BY d.id;
 ```
 
 Hệ quả của query:
 
 - Chỉ phòng ban có ít nhất một user liên kết mới được lấy.
+- Bỏ qua phòng ban có `lark_department_id` là `NULL` để tránh lấy nhân sự ở cấp gốc rồi gắn nhầm tên phòng ban.
 - Tổ chức phải có một app với `type = 'attendance'`.
 - Query hiện không lọc theo cột trạng thái active/inactive.
 - Mỗi phòng ban xuất hiện một lần nhờ `DISTINCT ON (d.id)`.
